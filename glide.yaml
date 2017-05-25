@@ -1,2 +1,9 @@
 package: github.com/enmand/waffy
-import: []
+import:
+- package: github.com/gogo/protobuf
+  version: ^0.4.0
+- package: github.com/valyala/fasthttp
+  version: ^20160617.0.0
+- package: github.com/spf13/cobra
+- package: github.com/joho/godotenv
+  version: ^1.1.0
