@@ -1,12 +1,16 @@
-hash: 33c3ff1f165b879e1d102f716af112b9eb51cba53e229864f896a5830729a3ba
-updated: 2017-05-25T20:09:40.006958402-03:00
+hash: f9b0faf66a317f165ece584b7f6126f6c4dd0d4e719a25765118fd54d8439a36
+updated: 2017-05-25T21:25:28.944519932-03:00
 imports:
 - name: github.com/gogo/protobuf
   version: 100ba4e885062801d56799d78530b73b178a78f3
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/joho/godotenv
   version: 726cc8b906e3d31c70a9671c90a13716a8d3f50d
 - name: github.com/spf13/cobra
   version: ca57f0f5dba473a8a58765d16d7e811fb8027add
+- name: github.com/spf13/pflag
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/valyala/fasthttp
   version: d42167fd04f636e20b005e9934159e95454233c7
 testImports: []
