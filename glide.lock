@@ -1,5 +1,5 @@
-hash: f9b0faf66a317f165ece584b7f6126f6c4dd0d4e719a25765118fd54d8439a36
-updated: 2017-05-25T21:25:28.944519932-03:00
+hash: d2c2f13af3718773c8f59bca2c875a641d3158e704728585531d4eef8f2bf3f2
+updated: 2017-05-26T17:26:09.763497665-03:00
 imports:
 - name: github.com/gogo/protobuf
   version: 100ba4e885062801d56799d78530b73b178a78f3
@@ -13,4 +13,6 @@ imports:
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/valyala/fasthttp
   version: d42167fd04f636e20b005e9934159e95454233c7
+- name: google.golang.org/grpc
+  version: d2e1b51f33ff8c5e4a15560ff049d200e83726c5
 testImports: []

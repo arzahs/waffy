@@ -1,0 +1,8 @@
+// Sites service
+//
+// Sites service is used to manage Sites, and backend Endpoints, as well as associated rules
+syntax = "proto3";
+package sites;
+
+// Site
+message Site {}

@@ -1,0 +1,22 @@
+// Users service
+//
+// The Users service manages users
+syntax = "proto3";
+package users;
+import "protos/certificates.proto";
+
+// Role represents the access level of the user
+enum Role {
+	USER = 0;
+	ADMIN = 1;
+}
+
+// User is a user who can access the system
+message User {
+	string email = 1; // email is the primary identifer of the User
+	string name = 2; // name is a display name for the user
+	Role role = 3; // role is the user's access level
+
+	certificates.Certificate certificate = 4; // certificate is the user's certificate
+	certificates.PrivateKey privatekey = 5; // private key is the user's private key
+}

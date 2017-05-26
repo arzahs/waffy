@@ -1,0 +1,31 @@
+// Certificate service
+//
+// The Certificate service manages Certicates for Sites and Users
+syntax = "proto3";
+package certificates;
+
+// Subject is the identity information for the certificate
+message Subject {
+	string common_name = 1; // common name of the Site for the Certificate
+	string email = 2; // email of the User for the Certificate
+
+    repeated string organization = 3; // organization name
+    repeated string country = 4;
+    repeated string province = 5;
+    repeated string locality = 6;
+
+    bytes serial_numer = 7; // Serial number of the Subject for the Certificate
+}
+
+// Certificate represents some PKI certificate
+message Certificate {
+	Subject subject = 1; // The Subject of the Certificate
+
+	bytes certificate = 2; // Certificate data
+	bytes serial_number = 3; // Serial number of the Certificate
+}
+
+// PrivateKey represents a PrivateKey used to unlock some Certificate
+message PrivateKey {
+    bytes key = 1; // key data
+}

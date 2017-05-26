@@ -1,0 +1,10 @@
+// Rules service
+//
+// The Rules service manages the Rules for Sites and Endpoints
+syntax = "proto3";
+package rules;
+
+// Rules are flow rules for Sites and Endpoitns
+message Rules {
+
+}
