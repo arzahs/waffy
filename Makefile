@@ -29,7 +29,10 @@ bin/waffy: bootstrap vendor bin
 	go build ./cmd/waffy/
 	mv waffy bin/
 
-generated: protoc bootstrap vendor
+services:
+	mkdir -p services
+
+generated: services protoc bootstrap vendor
 	go generate
 
 clean:
