@@ -3,18 +3,22 @@
 // DO NOT EDIT!
 
 /*
-Package nodes is a generated protocol buffer package.
+	Package nodes is a generated protocol buffer package.
 
-It is generated from these files:
-	protos/nodes/nodes.proto
+	It is generated from these files:
+		protos/nodes/nodes.proto
 
-It has these top-level messages:
+	It has these top-level messages:
+		Node
 */
 package nodes
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import certificates "protos/certificates"
+
+import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -27,13 +31,400 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// Node represents a load balancer node
+type Node struct {
+	Hostname    string                    `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Certificate *certificates.Certificate `protobuf:"bytes,2,opt,name=certificate" json:"certificate,omitempty"`
+	Privatekey  *certificates.PrivateKey  `protobuf:"bytes,3,opt,name=privatekey" json:"privatekey,omitempty"`
+}
+
+func (m *Node) Reset()                    { *m = Node{} }
+func (m *Node) String() string            { return proto.CompactTextString(m) }
+func (*Node) ProtoMessage()               {}
+func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{0} }
+
+func (m *Node) GetCertificate() *certificates.Certificate {
+	if m != nil {
+		return m.Certificate
+	}
+	return nil
+}
+
+func (m *Node) GetPrivatekey() *certificates.PrivateKey {
+	if m != nil {
+		return m.Privatekey
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*Node)(nil), "nodes.Node")
+}
+func (m *Node) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Node) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Hostname) > 0 {
+		data[i] = 0xa
+		i++
+		i = encodeVarintNodes(data, i, uint64(len(m.Hostname)))
+		i += copy(data[i:], m.Hostname)
+	}
+	if m.Certificate != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintNodes(data, i, uint64(m.Certificate.Size()))
+		n1, err := m.Certificate.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.Privatekey != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintNodes(data, i, uint64(m.Privatekey.Size()))
+		n2, err := m.Privatekey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func encodeFixed64Nodes(data []byte, offset int, v uint64) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	data[offset+4] = uint8(v >> 32)
+	data[offset+5] = uint8(v >> 40)
+	data[offset+6] = uint8(v >> 48)
+	data[offset+7] = uint8(v >> 56)
+	return offset + 8
+}
+func encodeFixed32Nodes(data []byte, offset int, v uint32) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	return offset + 4
+}
+func encodeVarintNodes(data []byte, offset int, v uint64) int {
+	for v >= 1<<7 {
+		data[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	data[offset] = uint8(v)
+	return offset + 1
+}
+func (m *Node) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Hostname)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	if m.Certificate != nil {
+		l = m.Certificate.Size()
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	if m.Privatekey != nil {
+		l = m.Privatekey.Size()
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	return n
+}
+
+func sovNodes(x uint64) (n int) {
+	for {
+		n++
+		x >>= 7
+		if x == 0 {
+			break
+		}
+	}
+	return n
+}
+func sozNodes(x uint64) (n int) {
+	return sovNodes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *Node) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNodes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Node: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Node: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hostname = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Certificate", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Certificate == nil {
+				m.Certificate = &certificates.Certificate{}
+			}
+			if err := m.Certificate.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Privatekey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Privatekey == nil {
+				m.Privatekey = &certificates.PrivateKey{}
+			}
+			if err := m.Privatekey.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNodes(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNodes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipNodes(data []byte) (n int, err error) {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowNodes
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if data[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+			return iNdEx, nil
+		case 1:
+			iNdEx += 8
+			return iNdEx, nil
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthNodes
+			}
+			return iNdEx, nil
+		case 3:
+			for {
+				var innerWire uint64
+				var start int = iNdEx
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowNodes
+					}
+					if iNdEx >= l {
+						return 0, io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					innerWire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				innerWireType := int(innerWire & 0x7)
+				if innerWireType == 4 {
+					break
+				}
+				next, err := skipNodes(data[start:])
+				if err != nil {
+					return 0, err
+				}
+				iNdEx = start + next
+			}
+			return iNdEx, nil
+		case 4:
+			return iNdEx, nil
+		case 5:
+			iNdEx += 4
+			return iNdEx, nil
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+	}
+	panic("unreachable")
+}
+
+var (
+	ErrInvalidLengthNodes = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowNodes   = fmt.Errorf("proto: integer overflow")
+)
+
 func init() { proto.RegisterFile("protos/nodes/nodes.proto", fileDescriptorNodes) }
 
 var fileDescriptorNodes = []byte{
-	// 66 bytes of a gzipped FileDescriptorProto
+	// 165 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x92, 0x28, 0x28, 0xca, 0x2f,
-	0xc9, 0x2f, 0xd6, 0xcf, 0xcb, 0x4f, 0x49, 0x85, 0x92, 0x7a, 0x60, 0x21, 0x21, 0x56, 0x30, 0xc7,
-	0x49, 0xe0, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x40, 0xfc, 0x00, 0x88, 0x67, 0x3c, 0x96, 0x63, 0x48,
-	0x62, 0x03, 0xcb, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xb5, 0x6a, 0xda, 0x0d, 0x3b, 0x00,
-	0x00, 0x00,
+	0xc9, 0x2f, 0xd6, 0xcf, 0xcb, 0x4f, 0x49, 0x85, 0x92, 0x7a, 0x60, 0x21, 0x21, 0x56, 0x30, 0x47,
+	0x4a, 0x0d, 0xaa, 0x20, 0x39, 0xb5, 0xa8, 0x24, 0x33, 0x2d, 0x33, 0x39, 0xb1, 0x24, 0x15, 0x95,
+	0x03, 0x51, 0xae, 0x34, 0x93, 0x91, 0x8b, 0xc5, 0x0f, 0xa8, 0x43, 0x48, 0x8a, 0x8b, 0x23, 0x23,
+	0xbf, 0xb8, 0x24, 0x2f, 0x31, 0x37, 0x55, 0x82, 0x51, 0x81, 0x51, 0x83, 0x33, 0x08, 0xce, 0x17,
+	0xb2, 0xe6, 0xe2, 0x46, 0xd2, 0x2a, 0xc1, 0x04, 0x94, 0xe6, 0x36, 0x92, 0xd4, 0x43, 0x31, 0xce,
+	0x19, 0xc1, 0x09, 0x42, 0x56, 0x2d, 0x64, 0xc1, 0xc5, 0x55, 0x50, 0x94, 0x59, 0x06, 0x64, 0x66,
+	0xa7, 0x56, 0x4a, 0x30, 0x83, 0xf5, 0x4a, 0xa0, 0xea, 0x0d, 0x80, 0xc8, 0x7b, 0xa7, 0x56, 0x06,
+	0x21, 0xa9, 0x75, 0x12, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0x02, 0x10, 0x3f, 0x00, 0xe2, 0x19, 0x8f,
+	0xe5, 0x18, 0x92, 0xd8, 0xc0, 0x8e, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xe2, 0x03, 0x11,
+	0xdb, 0xff, 0x00, 0x00, 0x00,
 }

@@ -1,5 +1,15 @@
 // Nodes messages and services
+//
+// Node services manage Nodes for the load balancer
 
 syntax = "proto3";
 package nodes;
+import "protos/certificates/certificates.proto";
 
+// Node represents a load balancer node
+message Node {
+    string hostname = 1; // hostname is the hostname of the IP address
+
+    certificates.Certificate certificate = 2; // certificate is the Node's authentication certificate
+    certificates.PrivateKey privatekey = 3; // privatekey is the Node's private key
+}

@@ -3,6 +3,22 @@
 // Sites service is used to manage Sites, and backend Endpoints, as well as associated rules
 syntax = "proto3";
 package sites;
+import "protos/nodes/nodes.proto";
 
-// Site
-message Site {}
+// Site represents a Site that should be load balanced, and have Rules applied to it
+message Site {
+    string hostname = 1; // hostname of the Site
+    repeated string alias = 2; // alias hostnames for the Site
+
+    bool secure = 5; // secure if the site should be served over TLS
+    bool autoencrypt = 6; // autoencrypt will automatically encrypt the site with LetsEncrypt
+}
+
+// Balancer represents a Site load balancer
+message Balancer {
+    string proto = 3; // protocol the Balancer should to listen on
+    string port = 4; // the port site Balancer should listen on
+
+    repeated Site sites = 1; // Site represents the Sites that should be served on this Load Balancer
+    repeated nodes.Node notes = 2; // Nodes are the Nodes that balance the Sites
+}
