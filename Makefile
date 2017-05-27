@@ -14,17 +14,18 @@ bootstrap: $(BOOTREQS)
 protoc:
 	@which protoc || (echo 'Protocol Buffers is required. Install protoc' && exit 1)
 
-vendor: bootstrap glide.lock
+vendor: glide.lock glide.yaml
 	glide install
+	touch $@
 
 bin:
 	mkdir -p bin
 
-bin/waffyd: vendor bin generated
+bin/waffyd: bootstrap vendor bin
 	go build ./cmd/waffyd/
 	mv waffyd bin/
 
-bin/waffy: vendor bin generated
+bin/waffy: bootstrap vendor bin
 	go build ./cmd/waffy/
 	mv waffy bin/
 
