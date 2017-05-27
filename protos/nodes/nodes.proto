@@ -1,0 +1,5 @@
+// Nodes messages and services
+
+syntax = "proto3";
+package nodes;
+

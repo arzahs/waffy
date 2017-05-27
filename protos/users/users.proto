@@ -3,7 +3,7 @@
 // The Users service manages users
 syntax = "proto3";
 package users;
-import "protos/certificates.proto";
+import "protos/certificates/certificates.proto";
 
 // Role represents the access level of the user
 enum Role {
