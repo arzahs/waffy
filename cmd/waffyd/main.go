@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/enmand/waffy/pkg/cmd/waffyd"
+	"github.com/unerror/waffy/pkg/cmd/waffyd"
 )
 
 func main() {

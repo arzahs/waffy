@@ -1,4 +1,4 @@
-package: github.com/enmand/waffy
+package: github.com/unerror/waffy
 import:
 - package: github.com/gogo/protobuf
   version: ^0.4.0
