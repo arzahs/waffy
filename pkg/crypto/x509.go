@@ -13,18 +13,10 @@ import (
 	"time"
 )
 
-const (
-	caKeyUsage   = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
-	hostKeyUsage = x509.KeyUsageKeyEncipherment | x509.KeyUsageDataEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement
-)
+const caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
 
-type privateKey struct {
-	N *big.Int
-	E int
-}
-
-// PrivateKey generates a new RSA PublicKey
-func PrivateKey(bits int) (crypto.PrivateKey, error) {
+// NewPrivateKey generates a new RSA PublicKey
+func NewPrivateKey(bits int) (crypto.PrivateKey, error) {
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate private key: %s", err)
@@ -36,8 +28,8 @@ func PrivateKey(bits int) (crypto.PrivateKey, error) {
 }
 
 // x590CertificateAuthority generates generates a new *x590.Certificate
-func CertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
-	rsaKey, subjectKeyId, err := keyAndSubjectId(key)
+func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
+	rsaKey, subjectId, err := keyAndSubjectId(key)
 	if err != nil {
 		return nil, err
 	}
@@ -52,15 +44,23 @@ func CertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
 		ExtKeyUsage: nil,
 
 		IsCA:         true,
-		SubjectKeyId: subjectKeyId[:],
+		SubjectKeyId: subjectId[:],
 	}
 
-	cert, err := x509.CreateCertificate(rand.Reader, &template, &template, rsaKey.PublicKey, key)
+	cert, err := x509.CreateCertificate(rand.Reader, &template, &template, &rsaKey.PublicKey, rsaKey)
+	if err != nil {
+		return nil, err
+	}
 
 	return x509.ParseCertificate(cert)
 }
 
-func keyAndSubjectId(key crypto.PrivateKey) (*rsa.PrivateKey, [20]byte, error) {
+type privateKey struct {
+	N *big.Int
+	E int
+}
+
+func keyAndSubjectId(key crypto.PrivateKey) (*rsa.PrivateKey, []byte, error) {
 	rsaKey, ok := key.(*rsa.PrivateKey)
 	if !ok {
 		return nil, nil, fmt.Errorf("unable to parse private key for generation")
@@ -75,7 +75,7 @@ func keyAndSubjectId(key crypto.PrivateKey) (*rsa.PrivateKey, [20]byte, error) {
 }
 
 // x509SubjectKeyId returns a suitable Subject
-func subjectKeyId(pub crypto.PublicKey) ([20]byte, error) {
+func subjectKeyId(pub crypto.PublicKey) ([]byte, error) {
 	cert, ok := pub.(*rsa.PublicKey)
 	if !ok {
 		return nil, fmt.Errorf("unable to parse public key for SubjectKeyId")
@@ -86,5 +86,6 @@ func subjectKeyId(pub crypto.PublicKey) ([20]byte, error) {
 		return nil, fmt.Errorf("unable to marshal key: %s", err)
 	}
 
-	return sha1.Sum(pubBytes), nil
+	hash := sha1.Sum(pubBytes)
+	return hash[:], nil
 }

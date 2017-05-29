@@ -3,7 +3,7 @@ BOOTREQS = \
 	github.com/golang/lint/golint \
 	github.com/alecthomas/gometalinter
 
-.PHONY: generated run clean static bootstrap $(BOOTREQS) install test lint
+.PHONY: $(BOOTREQS) generated run clean static bootstrap $(BOOTREQS) install test lint
 
 $(BOOTREQS):
 	go get -u $@
@@ -14,9 +14,11 @@ bootstrap: $(BOOTREQS)
 protoc:
 	@which protoc || (echo 'Protocol Buffers is required. Install protoc' && exit 1)
 
+glide.lock:
+	touch $@
+
 vendor: glide.lock glide.yaml
 	glide install
-	touch $@
 
 bin:
 	mkdir -p bin

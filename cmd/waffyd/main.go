@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := waffyd.RootCmd.Execute(); err != nil {
-		log.Fatalf("Unable to load root command: %s", err)
+	if err := waffyd.Start(); err != nil {
+		log.Fatal("unable to start waffyd")
 	}
 }

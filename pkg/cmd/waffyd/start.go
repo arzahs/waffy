@@ -1,16 +1,15 @@
 package waffyd
 
-import "github.com/spf13/cobra"
+import "gopkg.in/urfave/cli.v1"
 
 func init() {
-	RootCmd.AddCommand(&cobra.Command{
-		Use:   "start",
-		Short: "Start the waffyd",
-		Long:  "Start the waffy Web Application Firewall",
-		Run:   start,
+	Cmds = append(Cmds, cli.Command{
+		Name:   "start",
+		Usage:  "Start the waffyd service",
+		Action: start,
 	})
 }
 
-func start(command *cobra.Command, args []string) {
+func start(c *cli.Context) {
 
 }

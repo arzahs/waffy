@@ -1,21 +1,26 @@
 package waffyd
 
 import (
-	"github.com/spf13/cobra"
+	"log"
+
+	"os"
+
+	"github.com/unerror/waffy/pkg/config"
+	"gopkg.in/urfave/cli.v1"
 )
 
-var RootCmd *cobra.Command
+var Cmds []cli.Command
 
-func init() {
-	RootCmd = &cobra.Command{
-		Use:    "waffyd start",
-		Short:  "waffy daemon",
-		Long:   "waffy Web Application Firewall",
-		Hidden: true,
-		Run: func(command *cobra.Command, args []string) {
-			if err := command.Help(); err != nil {
-				panic("Cannot load help")
-			}
-		},
+func Start() error {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("unable to load configuration: %s", err)
 	}
+	app := cli.NewApp()
+	app.Name = "waffyd"
+	app.Usage = "waffyd firewall and load balancer"
+	app.Version = cfg.Version
+	app.Commands = Cmds
+
+	return app.Run(os.Args)
 }

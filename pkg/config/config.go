@@ -19,6 +19,9 @@ const (
 	DefaultRPCName = "waffy.local"
 )
 
+// Version is the version of the software
+var Version = "0.0.1"
+
 // Config is the main configuration for waffy
 type Config struct {
 	// API Listener is the address the API should listen on
@@ -29,6 +32,9 @@ type Config struct {
 
 	// RPCName is the hostname of the RPC client
 	RPCName string
+
+	// Version is the version currently running
+	Version string
 }
 
 var cfg *Config
@@ -43,7 +49,10 @@ func init() {
 		APIListen: getEnv("WAFFY_API_LISTEN", c, DefaultAPIListen),
 		CertPath:  getEnv("WAFFY_CERT_PATH", c, DefaultCertPath),
 		RPCName:   getEnv("WAFFY_RPC_NAME", c, DefaultRPCName),
+
+		Version: Version,
 	}
+
 }
 
 func getEnv(cfg string, c map[string]string, defValue string) string {
