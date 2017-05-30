@@ -41,7 +41,7 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 
 	kf, err := loadFile("ca.key")
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not load ca key")
+		return cert, nil, fmt.Errorf("could not load ca key: %s", err)
 	}
 
 	key, err := loadKey(kf)
