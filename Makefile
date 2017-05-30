@@ -59,4 +59,8 @@ lint-next: install
 # Tests
 
 test:
-	goconvey -launchBrowser=false -excludedDirs=protos,vendor
+	go test ./pkg/... -v
+
+test-web:
+	goconvey -excludedDirs=protos,vendor
+
