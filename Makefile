@@ -1,7 +1,7 @@
 # Bootstap Requirements
 BOOTREQS = \
 	github.com/golang/lint/golint \
-	github.com/alecthomas/gometalinter
+	github.com/alecthomas/gometalinter \
 
 .PHONY: $(BOOTREQS) generated run clean static bootstrap $(BOOTREQS) install test lint
 
@@ -9,6 +9,7 @@ $(BOOTREQS):
 	go get -u $@
 
 bootstrap: $(BOOTREQS)
+	go get github.com/smartystreets/goconvey
 	@which glide || curl http://glide.sh/get | sh
 
 protoc:
@@ -58,4 +59,4 @@ lint-next: install
 # Tests
 
 test:
-	go test ./pkg/...
+	goconvey -launchBrowser=false -excludedDirs=protos,vendor
