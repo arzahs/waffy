@@ -3,7 +3,7 @@ package data
 
 // Node presents a single key/value pair
 type Node struct {
-	Key string
+	Key []byte
 	Value []byte
 	Bucket bool
 }
@@ -11,7 +11,7 @@ type Node struct {
 // ValueGetter is an interface that can get data
 type ValueGetter interface {
 	// Get returns the value for key k
-	Get(k string) ([]byte, error)
+	Get(k []byte) ([]byte, error)
 }
 
 // ValueSetter is an interface that can set data
@@ -31,14 +31,15 @@ type ValueLister interface {
 	List() ([]Node, error)
 }
 
-type Buckets interface {
-	Bucket(name string) Store
-	DeleteBucket(name string) Store
+type Bucket interface {
+	Bucket(name string) (Store, error)
+	DeleteBucket(name string) error
 }
 
 // Store represents a data store that can be loaded as key/value pairs
 type Store interface {
-	Buckets
+	Bucket
+	ValueLister
 	ValueGetter
 	ValueSetter
 	ValueDeleter

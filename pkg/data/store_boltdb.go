@@ -1,17 +1,12 @@
 package data
 
 import (
-	"bytes"
 	"fmt"
+
+	"bytes"
 
 	"github.com/boltdb/bolt"
 )
-
-type bucketable interface {
-	CreateBucket(key []byte) (*bolt.Bucket, error)
-	CreateBucketIfNotExists(key []byte) (*bolt.Bucket, error)
-	DeleteBucket(key []byte) error
-}
 
 // BoltDB represents a database connection to BoltDB, and underlying Bucket storage
 type BoltDB struct {
@@ -22,8 +17,9 @@ type BoltDB struct {
 // BoltBucket is an implementation of Store using BoltDB
 type BoltBucket struct {
 	db      *bolt.DB
-	b       *bolt.Bucket
 	buckets map[string]*BoltBucket
+	name    []byte
+	parent  Bucket
 }
 
 // NewDB returns a new *BoltDB Store
@@ -42,14 +38,27 @@ func NewDB(path string) (*BoltDB, error) {
 }
 
 // Bucket returns a new base bucket on the BoltDB store
-func (d *BoltDB) Bucket(name string) (*BoltBucket, error) {
+func (d *BoltDB) Bucket(name string) (Store, error) {
+	bucketName := []byte(name)
+
 	if b, ok := d.buckets[name]; ok {
 		return b, nil
 	}
 
-	bb, err := getOrCreateBucket(d.db, &bolt.Tx{}, []byte(name))
+	err := d.db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(bucketName)
+
+		return err
+	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot create bucket: %s", err)
+		return nil, err
+	}
+
+	bb := &BoltBucket{
+		db:      d.db,
+		buckets: make(map[string]*BoltBucket),
+		name:    bucketName,
+		parent:  d,
 	}
 
 	d.buckets[name] = bb
@@ -59,116 +68,28 @@ func (d *BoltDB) Bucket(name string) (*BoltBucket, error) {
 
 // DeleteBucket removes a base bucket on the BoltDB store
 func (d *BoltDB) DeleteBucket(name string) error {
-	return deleteBucket(d.buckets, d.db, &bolt.Tx{}, []byte(name))
-}
+	bucketName := []byte(name)
 
-// Close closes the database connection
-func (d *BoltDB) Close() error {
-	return d.db.Close()
-}
-
-// Get returns the value of a key in the BoltBucket
-func (s *BoltBucket) Get(k string) ([]byte, error) {
-	var v []byte
-	err := s.db.View(func(tx *bolt.Tx) error {
-		v = s.b.Get([]byte(k))
-
-		return nil
+	err := d.db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket(bucketName)
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return v, err
-}
+	delete(d.buckets, name)
 
-// Set stores a Node in the BoltBucket
-func (s *BoltBucket) Set(n Node) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		return s.b.Put([]byte(n.Key), []byte(n.Value))
-	})
-}
-
-// Delete deletes a Node by Key or by Value. Delete by Key does a simple delete. Delete by Value
-// iterates over the database for the Node with the given Value
-func (s *BoltBucket) Delete(n Node) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		if err := s.b.Delete([]byte(n.Key)); err != nil {
-			return err
-		}
-
-		err := s.b.ForEach(func(k, v []byte) error {
-			if bytes.Equal(v, n.Value) {
-				return s.b.Delete(k)
-			}
-
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-// List returns the Nodes. Nodes with empty an Value are Buckets
-func (s *BoltBucket) List() ([]Node, error) {
-	var nodes []Node
-	err := s.db.View(func(tx *bolt.Tx) error {
-		return s.b.ForEach(func(k, v []byte) error {
-			nodes = append(nodes, Node{
-				Key:    string(k),
-				Value:  v,
-				Bucket: false,
-			})
-
-			return nil
-		})
-	})
-
-	for name := range s.buckets {
-		nodes = append(nodes, Node{
-			Key:    name,
-			Bucket: true,
-		})
-	}
-
-	return nodes, err
+	return nil
 }
 
 // Bucket creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
-func (s *BoltBucket) Bucket(name string) (*BoltBucket, error) {
+func (s *BoltBucket) Bucket(name string) (Store, error) {
 	if b, ok := s.buckets[name]; ok {
 		return b, nil
 	}
 
-	bb, err := getOrCreateBucket(s.db, s.b, []byte(name))
-	if err != nil {
-		return nil, err
-	}
-
-	s.buckets[name] = bb
-
-	return bb, nil
-}
-
-// DeleteBucket removes a leaf BoltBucket from this BoltBucket
-func (s *BoltBucket) DeleteBucket(name string) error {
-	return deleteBucket(s.buckets, s.db, s.b, []byte(name))
-}
-
-func getOrCreateBucket(db *bolt.DB, bable bucketable, k []byte) (*BoltBucket, error) {
-	var b *bolt.Bucket
-
-	err := db.Update(func(tx *bolt.Tx) error {
-		var err error
-		switch buck := bable.(type) {
-		case *bolt.Tx:
-			b, err = tx.CreateBucketIfNotExists(k)
-		default:
-			b, err = buck.CreateBucketIfNotExists(k)
-		}
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		_, err := s.bucket(tx, []byte(name))
 		if err != nil {
 			return err
 		}
@@ -180,29 +101,178 @@ func getOrCreateBucket(db *bolt.DB, bable bucketable, k []byte) (*BoltBucket, er
 	}
 
 	bb := &BoltBucket{
-		db:      db,
-		b:       b,
+		db:      s.db,
 		buckets: make(map[string]*BoltBucket),
+		name:    []byte(name),
+		parent:  s,
 	}
 
-	return bb, nil
+	s.buckets[name] = bb
+
+	return bb, err
 }
 
-func deleteBucket(buckets map[string]*BoltBucket, db *bolt.DB, bable bucketable, k []byte) error {
-	if _, ok := buckets[string(k)]; !ok {
-		return fmt.Errorf("key %s does not exist", k)
+func (s *BoltBucket) bucket(tx *bolt.Tx, name []byte) (*bolt.Bucket, error) {
+	switch s.parent.(type) {
+	case *BoltDB:
+		bucket, err := tx.CreateBucketIfNotExists(s.name)
+		if err != nil {
+			return nil, err
+		}
+		return bucket.CreateBucketIfNotExists([]byte(name))
+	case *BoltBucket:
+		parent, err := s.parent.(*BoltBucket).bucket(tx, s.name)
+		if err != nil {
+			return nil, err
+		}
+
+		return parent.CreateBucketIfNotExists([]byte(name))
 	}
 
-	return db.Update(func(tx *bolt.Tx) error {
-		switch buck := bable.(type) {
-		case *bolt.Tx:
-			return tx.DeleteBucket(k)
-		default:
-			return buck.DeleteBucket(k)
-		}
-	})
+	return nil, fmt.Errorf("unable to create bucket")
+}
 
-	delete(buckets, string(k))
+func (s *BoltBucket) this(tx *bolt.Tx) (*bolt.Bucket, error) {
+	var parent *bolt.Bucket
+	switch s.parent.(type) {
+	case *BoltDB:
+		parent = tx.Bucket(s.name)
+	case *BoltBucket:
+		var err error
+		parent, err = s.parent.(*BoltBucket).bucket(tx, s.name)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return parent, nil
+}
+
+// DeleteBucket removes a leaf BoltBucket from this BoltBucket
+func (s *BoltBucket) DeleteBucket(name string) error {
+	if _, ok := s.buckets[name]; !ok {
+		return fmt.Errorf("bucket does not exist")
+	}
+
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		var parent *bolt.Bucket
+		switch s.parent.(type) {
+		case *BoltDB:
+			parent = tx.Bucket(s.name)
+		case *BoltBucket:
+			var err error
+			parent, err = s.parent.(*BoltBucket).bucket(tx, s.name)
+			if err != nil {
+				return err
+			}
+		}
+
+		return parent.DeleteBucket([]byte(name))
+	})
+	if err != nil {
+		return err
+	}
+
+	delete(s.buckets, name)
 
 	return nil
+}
+
+// Close closes the database connection
+func (d *BoltDB) Close() error {
+	return d.db.Close()
+}
+
+// Get returns the value of a key in the BoltBucket
+func (s *BoltBucket) Get(k []byte) ([]byte, error) {
+	var value []byte
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		value = bucket.Get(k)
+		if len(value) == 0 {
+			return fmt.Errorf("key %s does not exist", k)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return value, nil
+}
+
+// Set stores a Node in the BoltBucket
+func (s *BoltBucket) Set(n Node) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		return bucket.Put(n.Key, n.Value)
+	})
+}
+
+// Delete deletes a Node by Key or by Value. Delete by Key does a simple delete. Delete by Value
+// iterates over the database for the Node with the given Value
+func (s *BoltBucket) Delete(n Node) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		if n.Key != nil {
+			return bucket.Delete(n.Key)
+		}
+
+		if n.Value != nil {
+			bucket.ForEach(func(k, v []byte) error {
+				if bytes.Equal(v, n.Value) {
+					return bucket.Delete(k)
+				}
+				return fmt.Errorf("no value node found")
+			})
+		}
+		return fmt.Errorf("no node deleted")
+	})
+}
+
+// List returns the Nodes. Nodes with empty an Value are Bucket
+func (s *BoltBucket) List() ([]Node, error) {
+	var nodes []Node
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		return bucket.ForEach(func(k, v []byte) error {
+			nodes = append(nodes, Node{
+				Key:    k,
+				Value:  v,
+				Bucket: false,
+			})
+
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for name := range s.buckets {
+		nodes = append(nodes, Node{
+			Key:    []byte(name),
+			Bucket: true,
+		})
+	}
+
+	return nodes, nil
 }
