@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/pem"
 	"fmt"
 	"math/big"
 	"time"
@@ -25,6 +26,26 @@ func NewPrivateKey(bits int) (crypto.PrivateKey, error) {
 	key.Precompute()
 
 	return key, nil
+}
+
+// EncodePEM encodes the given certificate or key information as a PEM encoded block
+func EncodePEM(keydata interface{}) []byte {
+	var block pem.Block
+
+	switch data := keydata.(type) {
+	case *rsa.PrivateKey:
+		block = pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(data),
+		}
+	case *x509.Certificate:
+		block = pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: data.Raw,
+		}
+	}
+
+	return pem.EncodeToMemory(&block)
 }
 
 // x590CertificateAuthority generates generates a new *x590.Certificate

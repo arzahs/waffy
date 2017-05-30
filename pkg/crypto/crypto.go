@@ -80,3 +80,9 @@ func NewCertificateAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, er
 
 	return ca, privKey, nil
 }
+
+func LoadCertificateAuthrotityPool(ca *x509.Certificate) *x509.CertPool {
+	pool := x509.NewCertPool()
+	pool.AddCert(ca)
+	return pool
+}
