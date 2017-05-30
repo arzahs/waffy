@@ -67,7 +67,7 @@ func NewCertificate(
 	return x509.ParseCertificate(cert)
 }
 
-func NewCertAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, error) {
+func NewCertificateAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, error) {
 	privKey, err := NewPrivateKey(bits)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create private key: %s", err)

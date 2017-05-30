@@ -64,7 +64,7 @@ func genca(ctx *cli.Context) {
 			log.Fatalf("unable to load key size: %s", err)
 		}
 
-		ca, key, err := crypto.NewCertAuthority(keySize)
+		ca, key, err := crypto.NewCertificateAuthority(keySize)
 		if err != nil {
 			log.Fatalf("unable to create CA: %s", err)
 		}
