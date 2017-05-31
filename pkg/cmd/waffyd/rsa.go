@@ -4,11 +4,13 @@ import (
 	"log"
 	"strconv"
 
-	"fmt"
+	"gopkg.in/urfave/cli.v1"
 
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/unerror/waffy/pkg/data"
+	"github.com/unerror/waffy/pkg/repository"
+	"github.com/unerror/waffy/pkg/services/protos/certificates"
 )
 
 func init() {
@@ -61,21 +63,19 @@ func genca(ctx *cli.Context) {
 	}
 }
 
-func gencert(ctx *cli.Context) {
+func gencert(ctx *cli.Context) error {
 	write := ctx.Bool("overwrite")
 	cn := ctx.String("common-name")
 	if cn == "" {
 		log.Fatalf("--common-name is required")
 	}
 
-	certName := fmt.Sprintf("%s.crt", cn)
-	_, err := config.LoadCert(certName)
+	_, err := config.LoadCert(cn)
 	if err != nil {
 		write = true
 	}
 
 	if write {
-		keyName := fmt.Sprintf("%s.key", cn)
 		keySize, err := strconv.Atoi(ctx.String("key-size"))
 		if err != nil {
 			log.Fatalf("unable to load key size: %s", err)
@@ -96,13 +96,14 @@ func gencert(ctx *cli.Context) {
 			log.Fatalf("unable to generate new certificate: %s", err)
 		}
 
-		if err := config.SaveKey(keyName, key); err != nil {
+		if err := config.SaveKey(cn, key); err != nil {
 			log.Fatalf("unable to save private key: %s", err)
 		}
-		if err := config.SaveCert(certName, cert); err != nil {
+		if err := config.SaveCert(cn, cert); err != nil {
 			log.Fatalf("unable to save certificate: %s", err)
 		}
 	} else {
 		log.Fatalf("unable to save certificate for %s, already exists. --overwrite to force", cn)
 	}
+	return nil
 }

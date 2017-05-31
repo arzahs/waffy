@@ -54,13 +54,13 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 
 // SaveClient saves a client Certificate to the filesystem
 func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error {
-	certFile := filepath.Join(email, "user.crt")
+	certFile := filepath.Join("users", email, "user.crt")
 	err := saveCert(certFile, c)
 	if err != nil {
 		return err
 	}
 
-	keyFile := filepath.Join(email, "user.key")
+	keyFile := filepath.Join("users", email, "user.key")
 	err = saveKey(keyFile, k)
 	if err != nil {
 		return err
@@ -71,12 +71,14 @@ func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error 
 
 // SaveCert saves the certificate data to the file system
 func SaveCert(name string, certificate *x509.Certificate) error {
-	return saveCert(name, certificate)
+	certFile := filepath.Join("nodes", name, "node.crt")
+	return saveCert(certFile, certificate)
 }
 
 // LoadCert returns the Certificate from the filesystem
 func LoadCert(name string) (*x509.Certificate, error) {
-	f, err := loadFile(name)
+	path := filepath.Join("nodes", name, "node.crt")
+	f, err := loadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load key: %s", err)
 	}
@@ -85,12 +87,14 @@ func LoadCert(name string) (*x509.Certificate, error) {
 
 // SaveKey saves a given private key to the filesystem
 func SaveKey(name string, key crypto.PrivateKey) error {
-	return saveKey(name, key)
+	keyFile := filepath.Join("nodes", name, "node.key")
+	return saveKey(keyFile, key)
 }
 
 // LoadKey loads the given private key from the filesystem
 func LoadKey(name string) (crypto.PrivateKey, error) {
-	f, err := loadFile(name)
+	path := filepath.Join("nodes", name, "node.key")
+	f, err := loadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load private key: %s", err)
 	}

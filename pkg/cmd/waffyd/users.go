@@ -93,6 +93,9 @@ func createUser(ctx *cli.Context) error {
 		}
 
 		ca, caKey, err := config.LoadCA()
+		if err != nil {
+			return err
+		}
 
 		key, err := crypto.NewPrivateKey(ctx.Int("key-size"))
 		if err != nil {
