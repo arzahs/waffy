@@ -15,6 +15,9 @@ const (
 	// DefaultCertPath is the default path to certificates
 	DefaultCertPath = "./etc"
 
+	// DefaultDBPath is the default path to the database
+	DefaultDBPath = "./etc/waffy.db"
+
 	// DefaultRPCName is the hostname of the RPC
 	DefaultRPCName = "waffy.local"
 )
@@ -29,6 +32,9 @@ type Config struct {
 
 	// CertPath is the path to certificates for the system
 	CertPath string
+
+	// DBPath is the path to the internal database
+	DBPath string
 
 	// RPCName is the hostname of the RPC client
 	RPCName string
@@ -48,6 +54,7 @@ func init() {
 	cfg = &Config{
 		APIListen: getEnv("WAFFY_API_LISTEN", c, DefaultAPIListen),
 		CertPath:  getEnv("WAFFY_CERT_PATH", c, DefaultCertPath),
+		DBPath:    getEnv("WAFFY_DB_PATH", c, DefaultDBPath),
 		RPCName:   getEnv("WAFFY_RPC_NAME", c, DefaultRPCName),
 
 		Version: Version,
