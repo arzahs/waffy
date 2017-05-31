@@ -19,13 +19,8 @@ message Subject {
 
 // Certificate represents some PKI certificate
 message Certificate {
-	Subject subject = 1; // The Subject of the Certificate
+    Subject subject = 1; // The Subject of the Certificate
 
-	bytes certificate = 2; // Certificate data
-	bytes serial_number = 3; // Serial number of the Certificate
-}
-
-// PrivateKey represents a PrivateKey used to unlock some Certificate
-message PrivateKey {
-    bytes key = 1; // key data
+    bytes certificate = 2; // Certificate data
+    bytes serial_number = 3; // Serial number of the Certificate
 }
