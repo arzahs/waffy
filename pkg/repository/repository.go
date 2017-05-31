@@ -23,3 +23,13 @@ func Create(b data.Store, k []byte, m proto.Marshaler) error {
 		Value: mBytes,
 	})
 }
+
+// Seek finds the Unmarshable message with the key k in the data.Store b
+func Seek(b data.Store, k []byte, u proto.Unmarshaler) error {
+	mBytes, err := b.Seek(k)
+	if err != nil {
+		return err
+	}
+
+	return u.Unmarshal(mBytes)
+}

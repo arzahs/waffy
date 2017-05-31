@@ -19,3 +19,19 @@ func CreateUser(d data.Bucket, u *users.User) error {
 
 	return Create(b, []byte(u.Email), u)
 }
+
+// FindUserByEmail returns the User stored with the given email
+func FindUserByEmail(d data.Bucket, email string) (*users.User, error) {
+	b, err := d.Bucket(UsersBucket)
+	if err != nil {
+		return nil, err
+	}
+
+	u := users.User{}
+	err = Seek(b, []byte(email), &u)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
