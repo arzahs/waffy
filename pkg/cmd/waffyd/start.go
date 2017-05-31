@@ -7,7 +7,7 @@ import (
 
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
-	"github.com/unerror/waffy/services"
+	"github.com/unerror/waffy/pkg/services"
 	"gopkg.in/urfave/cli.v1"
 )
 
