@@ -3,7 +3,7 @@
 // The Users service manages users
 syntax = "proto3";
 package users;
-import "github.com/unerror/waffy/protos/certificates/certificates.proto";
+import "github.com/unerror/waffy/pkg/services/protos/certificates/certificates.proto";
 
 // Role represents the access level of the user
 enum Role {

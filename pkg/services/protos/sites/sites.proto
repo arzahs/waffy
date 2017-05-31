@@ -3,7 +3,7 @@
 // Sites service is used to manage Sites, and backend Endpoints, as well as associated rules
 syntax = "proto3";
 package sites;
-import "github.com/unerror/waffy/protos/nodes/nodes.proto";
+import "github.com/unerror/waffy/pkg/services/protos/nodes/nodes.proto";
 
 // Site represents a Site that should be load balanced, and have Rules applied to it
 message Site {

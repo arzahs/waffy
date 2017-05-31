@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 package nodes;
-import "github.com/unerror/waffy/protos/certificates/certificates.proto";
+import "github.com/unerror/waffy/pkg/services/protos/certificates/certificates.proto";
 
 // Node represents a load balancer node
 message Node {
