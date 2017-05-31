@@ -123,7 +123,7 @@ func createUser(ctx *cli.Context) error {
 
 		return repository.CreateUser(db, &u)
 	} else {
-		fmt.Print("Unable to create user %s since they already exist. --overwrite to force\n")
+		fmt.Printf("Unable to create user %s since they already exist. --overwrite to force\n", email)
 	}
 
 	return nil
