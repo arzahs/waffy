@@ -18,5 +18,4 @@ message User {
 	Role role = 3; // role is the user's access level
 
 	certificates.Certificate certificate = 4; // certificate is the user's certificate
-	certificates.PrivateKey privatekey = 5; // private key is the user's private key
 }
