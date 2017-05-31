@@ -102,6 +102,24 @@ func gencert(ctx *cli.Context) error {
 		if err := config.SaveCert(cn, cert); err != nil {
 			log.Fatalf("unable to save certificate: %s", err)
 		}
+
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		db, err := data.NewDB(cfg.DBPath)
+		if err != nil {
+			return err
+		}
+
+		c := &certificates.Certificate{
+			Certificate:  crypto.EncodePEM(cert),
+			SerialNumber: cert.SerialNumber.Bytes(),
+			Subject: &certificates.Subject{
+				CommonName: cn,
+			},
+		}
+		return repository.CreateCertificate(db, c)
 	} else {
 		log.Fatalf("unable to save certificate for %s, already exists. --overwrite to force", cn)
 	}
