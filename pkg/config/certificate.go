@@ -52,6 +52,23 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 	return cert, key, nil
 }
 
+// SaveClient saves a client Certificate to the filesystem
+func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error {
+	certFile := filepath.Join(email, "user.crt")
+	err := saveCert(certFile, c)
+	if err != nil {
+		return err
+	}
+
+	keyFile := filepath.Join(email, "user.key")
+	err = saveKey(keyFile, k)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // SaveCert saves the certificate data to the file system
 func SaveCert(name string, certificate *x509.Certificate) error {
 	return saveCert(name, certificate)
