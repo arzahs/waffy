@@ -276,3 +276,28 @@ func (s *BoltBucket) List() ([]Node, error) {
 
 	return nodes, nil
 }
+
+// Seek seeks a given key k in the Bucket
+func (s *BoltBucket) Seek(k []byte) ([]byte, error) {
+	var value []byte
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		c := bucket.Cursor()
+		var key []byte
+		key, value = c.Seek(k)
+		if key == nil {
+			return fmt.Errorf("key %s not found", k)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return value, err
+}

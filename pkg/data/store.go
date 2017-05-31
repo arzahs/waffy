@@ -31,6 +31,11 @@ type ValueLister interface {
 	List() ([]Node, error)
 }
 
+// ValueFinder is an interface that finds data in the store
+type ValueFinder interface {
+	Seek(k []byte) ([]byte, error)
+}
+
 type Bucket interface {
 	Bucket(name string) (Store, error)
 	DeleteBucket(name string) error
@@ -43,4 +48,5 @@ type Store interface {
 	ValueGetter
 	ValueSetter
 	ValueDeleter
+	ValueFinder
 }
