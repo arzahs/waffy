@@ -161,7 +161,27 @@ func ensureFile(filename string) (*os.File, error) {
 		}
 	}
 
-	path := filepath.Join(cfg.CertPath, filename)
+	var path string
+	certPath, err := filepath.Abs(cfg.CertPath)
+	if err != nil {
+		return nil, err
+	}
+
+	dir, fName := filepath.Split(filename)
+	if fName != "" {
+		dir := filepath.Join(cfg.CertPath, dir)
+		if err := os.MkdirAll(dir, 0744); err != nil {
+			if !os.IsExist(err) || !os.IsNotExist(err) {
+				return nil, err
+			}
+		}
+
+		path = filepath.Join(dir, fName)
+	}
+	if fName == "" {
+		path = filepath.Join(certPath, filename)
+
+	}
 	f, err := os.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create CertPath: %s", err)
