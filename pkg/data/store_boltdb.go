@@ -191,7 +191,7 @@ func (d *BoltDB) Close() error {
 // Get returns the value of a key in the BoltBucket
 func (s *BoltBucket) Get(k []byte) ([]byte, error) {
 	var value []byte
-	err := s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := s.this(tx)
 		if err != nil {
 			return err
@@ -252,7 +252,7 @@ func (s *BoltBucket) Delete(n Node) error {
 func (s *BoltBucket) List() ([]Node, error) {
 	var nodes []Node
 
-	err := s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := s.this(tx)
 		if err != nil {
 			return err
