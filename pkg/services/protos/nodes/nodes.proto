@@ -12,3 +12,17 @@ message Node {
 
     certificates.Certificate certificate = 2; // certificate is the Node's authentication certificate
 }
+
+// Node service for node management
+service Node {
+    // Join a node to the consensus
+    rpc Join(JoinRequest) returns (JoinResponse)
+}
+
+message JoinRequest {
+    string url = 1; // url for consensus
+}
+
+message JoinResponse {
+    string error = 1; // error if the join failed
+}
