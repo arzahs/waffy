@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	// UsersBucket is the Store Bucket that users are stored in
+	// UsersBucket is the Bucket Store that users are stored in
 	UsersBucket = "users"
 )
 
 // CreateUser creates a user u in the data store d
-func CreateUser(d data.Bucket, u *users.User) error {
+func CreateUser(d data.Store, u *users.User) error {
 	b, err := d.Bucket(UsersBucket)
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func CreateUser(d data.Bucket, u *users.User) error {
 }
 
 // FindUserByEmail returns the User stored with the given email
-func FindUserByEmail(d data.Bucket, email string) (*users.User, error) {
+func FindUserByEmail(d data.Store, email string) (*users.User, error) {
 	b, err := d.Bucket(UsersBucket)
 	if err != nil {
 		return nil, err

@@ -8,21 +8,21 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// BoltDB represents a database connection to BoltDB, and underlying Bucket storage
+// BoltDB represents a database connection to BoltDB, and underlying Store storage
 type BoltDB struct {
 	db      *bolt.DB
 	buckets map[string]*BoltBucket
 }
 
-// BoltBucket is an implementation of Store using BoltDB
+// BoltBucket is an implementation of Bucket using BoltDB
 type BoltBucket struct {
 	db      *bolt.DB
 	buckets map[string]*BoltBucket
 	name    []byte
-	parent  Bucket
+	parent  Store
 }
 
-// NewDB returns a new *BoltDB Store
+// NewDB returns a new *BoltDB Bucket
 func NewDB(path string) (*BoltDB, error) {
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
@@ -37,8 +37,8 @@ func NewDB(path string) (*BoltDB, error) {
 	return b, nil
 }
 
-// Bucket returns a new base bucket on the BoltDB store
-func (d *BoltDB) Bucket(name string) (Store, error) {
+// Store returns a new base bucket on the BoltDB store
+func (d *BoltDB) Bucket(name string) (Bucket, error) {
 	bucketName := []byte(name)
 
 	if b, ok := d.buckets[name]; ok {
@@ -82,8 +82,8 @@ func (d *BoltDB) DeleteBucket(name string) error {
 	return nil
 }
 
-// Bucket creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
-func (s *BoltBucket) Bucket(name string) (Store, error) {
+// Store creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
+func (s *BoltBucket) Bucket(name string) (Bucket, error) {
 	if b, ok := s.buckets[name]; ok {
 		return b, nil
 	}
@@ -110,6 +110,11 @@ func (s *BoltBucket) Bucket(name string) (Store, error) {
 	s.buckets[name] = bb
 
 	return bb, err
+}
+
+// Close closes the connection to the data Bucket
+func (s *BoltBucket) Close() error {
+	return s.db.Close()
 }
 
 func (s *BoltBucket) bucket(tx *bolt.Tx, name []byte) (*bolt.Bucket, error) {
@@ -243,7 +248,7 @@ func (s *BoltBucket) Delete(n Node) error {
 	})
 }
 
-// List returns the Nodes. Nodes with empty an Value are Bucket
+// List returns the Nodes. Nodes with empty an Value are Store
 func (s *BoltBucket) List() ([]Node, error) {
 	var nodes []Node
 
@@ -277,7 +282,7 @@ func (s *BoltBucket) List() ([]Node, error) {
 	return nodes, nil
 }
 
-// Seek seeks a given key k in the Bucket
+// Seek seeks a given key k in the Store
 func (s *BoltBucket) Seek(k []byte) ([]byte, error) {
 	var value []byte
 	err := s.db.View(func(tx *bolt.Tx) error {

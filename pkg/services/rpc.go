@@ -12,7 +12,7 @@ import (
 )
 
 type baseHandler struct {
-	db data.Store
+	db data.Bucket
 }
 
 func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error {

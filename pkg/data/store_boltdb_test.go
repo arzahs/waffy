@@ -37,7 +37,7 @@ func TestBoltDB(t *testing.T) {
 		So(d.buckets, ShouldContainKey, "A")
 		So(b, ShouldHaveSameTypeAs, &BoltBucket{})
 
-		Convey("Create a Bucket in an Bucket should store a bucket in BoltDB", func() {
+		Convey("Create a Store in an Store should store a bucket in BoltDB", func() {
 			bbStore, err := b.Bucket("B")
 			bb := bbStore.(*BoltBucket)
 			So(err, ShouldBeNil)

@@ -7,8 +7,8 @@ import (
 	"github.com/unerror/waffy/pkg/data"
 )
 
-// Create will create a generic Marshable message m with key k in data.Store b
-func Create(b data.Store, k []byte, m proto.Marshaler) error {
+// Create will create a generic Marshable message m with key k in data.Bucket b
+func Create(b data.Bucket, k []byte, m proto.Marshaler) error {
 	if _, err := b.Get(k); err == nil {
 		return fmt.Errorf("%s already exists", k)
 	}
@@ -24,8 +24,8 @@ func Create(b data.Store, k []byte, m proto.Marshaler) error {
 	})
 }
 
-// Seek finds the Unmarshable message with the key k in the data.Store b
-func Seek(b data.Store, k []byte, u proto.Unmarshaler) error {
+// Seek finds the Unmarshable message with the key k in the data.Bucket b
+func Seek(b data.Bucket, k []byte, u proto.Unmarshaler) error {
 	mBytes, err := b.Seek(k)
 	if err != nil {
 		return err

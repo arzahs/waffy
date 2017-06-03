@@ -36,14 +36,17 @@ type ValueFinder interface {
 	Seek(k []byte) ([]byte, error)
 }
 
-type Bucket interface {
-	Bucket(name string) (Store, error)
+type Store interface {
+	Bucket(name string) (Bucket, error)
 	DeleteBucket(name string) error
+
+	// Close closes the connection to the Data store
+	Close() error
 }
 
-// Store represents a data store that can be loaded as key/value pairs
-type Store interface {
-	Bucket
+// Bucket represents a data store that can be loaded as key/value pairs
+type Bucket interface {
+	Store
 	ValueLister
 	ValueGetter
 	ValueSetter

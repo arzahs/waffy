@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	// CertificateBucket is the Store Bucket that cerificates are stored in
+	// CertificateBucket is the Bucket Store that cerificates are stored in
 	CertificateBucket = "certificates"
 )
 
 // CreateCertificate creates a Certificate in the data store
-func CreateCertificate(d data.Bucket, c *certificates.Certificate) error {
+func CreateCertificate(d data.Store, c *certificates.Certificate) error {
 	b, err := d.Bucket(CertificateBucket)
 	if err != nil {
 		return err
