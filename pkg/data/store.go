@@ -54,3 +54,18 @@ type Bucket interface {
 	ValueDeleter
 	ValueFinder
 }
+
+type Consensus interface {
+	Bucket
+
+	// GetWeak returns a weakly consistent value for the key k (in a consensus Bucket)
+	GetWeak(k []byte) ([]byte, error)
+
+	// ListWeak returns the weakly consistent list of Nodes for the Bucket
+	ListWeak() ([]Node, error)
+
+	// SeekWeak returns a weakly consistent value for the key k in the Bucket
+	SeekWeak(k []byte) ([]byte, error)
+
+	Join(addr string) error
+}

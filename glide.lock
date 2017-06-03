@@ -1,17 +1,27 @@
-hash: 5c6b9b4cd3398effe8b6ef5af76536e9c6dcf63d1f44f10ca7b89ca06a207431
-updated: 2017-05-29T17:16:51.561683769-03:00
+hash: 11cc75a2282bb1939d83a5124c89c7bdbcd1b17a779cd8fd68a3a3aff3b9ae85
+updated: 2017-05-31T20:10:02.605932616-03:00
 imports:
+- name: github.com/armon/go-metrics
+  version: 8ccd3f0cbe48a53668a9615f15ffe95c0526cff4
 - name: github.com/boltdb/bolt
   version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
 - name: github.com/gogo/protobuf
   version: 100ba4e885062801d56799d78530b73b178a78f3
+  subpackages:
+  - proto
 - name: github.com/golang/protobuf
   version: 9f174c986221c608fb5143bd623b6076a71feae3
   subpackages:
   - proto
   - ptypes/any
+- name: github.com/hashicorp/go-msgpack
+  version: fa3f63826f7c23912c15263591e65d54d080b458
+  subpackages:
+  - codec
 - name: github.com/hashicorp/raft
   version: 27f25bcc392fce1551deefe8a58b0d4d233fa2f8
+- name: github.com/hashicorp/raft-boltdb
+  version: df631556b57507bd5d0ed4f87468fd93ab025bef
 - name: github.com/joho/godotenv
   version: 726cc8b906e3d31c70a9671c90a13716a8d3f50d
 - name: github.com/spf13/pflag
@@ -61,4 +71,21 @@ imports:
   - transport
 - name: gopkg.in/urfave/cli.v1
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
-testImports: []
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 7cde3d36aea3e1b3be7827c4dcbe6bbae73d012e
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
+- name: github.com/smartystreets/assertions
+  version: f8459f92181409546d2762c9e9c4bedc23c92d76
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: af8e7d560364b90f732a1d119d17b5506e50447d
+  subpackages:
+  - convey
+  - convey/gotest
+  - convey/reporting
