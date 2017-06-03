@@ -67,5 +67,9 @@ type Consensus interface {
 	// SeekWeak returns a weakly consistent value for the key k in the Bucket
 	SeekWeak(k []byte) ([]byte, error)
 
+	// Join joins a Raft node to the consensus
 	Join(addr string) error
+
+	// Leave leaves a Raft node from the consensus
+	Leave(addr string) error
 }

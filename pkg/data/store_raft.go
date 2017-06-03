@@ -233,9 +233,22 @@ func (s *Raft) SeekWeak(k []byte) ([]byte, error) {
 	return b.Seek(k)
 }
 
-// Join joins another Node to this Consensus
+// Join joins another Node to this consensus
 func (s *Raft) Join(addr string) error {
+	if s.r.State() != raft.Leader {
+		return fmt.Errorf("invalid join request for addr %s on non-leader", addr)
+	}
+
 	return s.r.AddPeer(addr).Error()
+}
+
+// Leave leaves a Raft node from this consensus
+func (s *Raft) Leave(addr string) error {
+	if s.r.State() != raft.Leader {
+		return fmt.Errorf("invalid leave request for addr %s on non-leader", addr)
+	}
+
+	return s.r.RemovePeer(addr).Error()
 }
 
 // Bucket returns the leak bucket for the given path. Paths are stored as
