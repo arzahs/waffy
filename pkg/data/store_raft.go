@@ -21,10 +21,13 @@ const (
 	maxPoolSize = 3
 	timeout     = 10 * time.Second
 	retain      = 3
+
+	indexWaiterTime = 100 * time.Millisecond
 )
 
 const (
-	opDeleteBucket = iota
+	opBucket = iota
+	opDeleteBucket
 	opGet
 	opSet
 	opSeek
@@ -49,7 +52,7 @@ type Raft struct {
 	l *sync.Mutex
 }
 
-func NewRaft(raftDir, raftListen string, d Bucket) (Consensus, error) {
+func NewRaft(raftDir, raftListen string, s Store) (Consensus, error) {
 	raftConfig := raft.DefaultConfig()
 
 	addr, err := net.ResolveTCPAddr("tcp", raftListen)
@@ -67,8 +70,8 @@ func NewRaft(raftDir, raftListen string, d Bucket) (Consensus, error) {
 		return nil, err
 	}
 
-	if len(peers) < 1 {
-		raftConfig.DisableBootstrapAfterElect = true
+	if len(peers) <= 1 {
+		raftConfig.DisableBootstrapAfterElect = false
 		raftConfig.EnableSingleNode = true
 	}
 
@@ -81,22 +84,92 @@ func NewRaft(raftDir, raftListen string, d Bucket) (Consensus, error) {
 	logs, err := raftboltdb.NewBoltStore(fileLog)
 
 	r := &Raft{
-		s:    d,
+		s:    s,
 		path: "/",
+		l:    &sync.Mutex{},
 	}
 	r.r, err = raft.NewRaft(raftConfig, (*fsm)(r), logs, logs, snapshots, raftStore, transport)
 	if err != nil {
 		return nil, err
 	}
 
+	if len(peers) <= 1 {
+		err := r.WaitForLeader(timeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = r.waitForIndex(r.r.LastIndex(), timeout)
+	if err != nil {
+		return nil, fmt.Errorf("unable to wait for index: %s", err)
+	}
+
 	return r, nil
+}
+
+func (s *Raft) WaitForLeader(t time.Duration) error {
+	waiter := time.NewTicker(indexWaiterTime)
+	defer waiter.Stop()
+
+	tmr := time.NewTimer(t)
+	defer tmr.Stop()
+
+	for {
+		select {
+		case <-s.r.LeaderCh():
+			return nil
+		case <-waiter.C:
+			if s.r.Leader() != "" {
+				return nil
+			}
+		case <-tmr.C:
+			return fmt.Errorf("timeout expired for leader")
+		}
+	}
+}
+
+// waitForIndex waits for the latest applied index (e.g. for Leader election, or when we know
+// we need a specific index)
+func (s *Raft) waitForIndex(idx uint64, t time.Duration) error {
+	waiter := time.NewTicker(indexWaiterTime)
+	defer waiter.Stop()
+
+	tmr := time.NewTimer(t)
+	defer tmr.Stop()
+
+	for {
+		select {
+		case <-waiter.C:
+			if s.r.AppliedIndex() >= idx {
+				return nil
+			}
+
+		case <-tmr.C:
+			return fmt.Errorf("timeout expired")
+		}
+	}
 }
 
 // Store returns a new Store Bucket (that implements Consensus as well)
 func (s *Raft) Bucket(name string) (Bucket, error) {
+	path := fmt.Sprintf("%s%s/", s.path, name)
+
+	f, err := s.applyCmd(&command{
+		Op:         opBucket,
+		BucketPath: path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if fErr := f.error; fErr != nil {
+		return nil, fErr
+	}
+
 	return &Raft{
 		s:    s.s,
 		r:    s.r,
+		l:    s.l,
 		path: fmt.Sprintf("%s%s/", s.path, name),
 	}, nil
 }
@@ -254,12 +327,22 @@ func (s *Raft) Leave(addr string) error {
 // Bucket returns the leak bucket for the given path. Paths are stored as
 // slash-separated values, similar to a UNIX file system
 func (s *Raft) bucket(path string) (Bucket, error) {
-	paths := strings.Split(path, "/")
+	path = strings.TrimPrefix(path, "/")
+	path = strings.TrimSuffix(path, "/")
 
-	var b Bucket
+	paths := strings.Split(path, "/")
+	if len(paths) < 1 {
+		return nil, fmt.Errorf("unable to parse path %s", path)
+	}
+
+	b, err := s.s.Bucket(paths[0])
+	if err != nil {
+		return nil, err
+	}
+
 	for _, bName := range paths {
 		var err error
-		b, err = s.s.Bucket(bName)
+		b, err = b.Bucket(bName)
 		if err != nil {
 			return nil, err
 		}
@@ -315,6 +398,9 @@ func (sm *fsm) Apply(l *raft.Log) interface{} {
 	}
 
 	switch cmd.Op {
+	case opBucket:
+		_, err := b.Bucket(cmd.BucketPath)
+		return &fsmResponse{error: err}
 	case opDeleteBucket:
 		err := b.DeleteBucket(string(cmd.Key))
 		return &fsmResponse{error: err}
