@@ -3,8 +3,8 @@ package data
 
 // Node presents a single key/value pair
 type Node struct {
-	Key []byte
-	Value []byte
+	Key    []byte
+	Value  []byte
 	Bucket bool
 }
 
@@ -28,6 +28,7 @@ type ValueDeleter interface {
 
 // ValueLister is an interface that can list data
 type ValueLister interface {
+	// List lists the Nodes in the Bucket
 	List() ([]Node, error)
 }
 
