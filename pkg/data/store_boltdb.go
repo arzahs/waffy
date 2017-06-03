@@ -10,6 +10,7 @@ import (
 
 // BoltDB represents a database connection to BoltDB, and underlying Store storage
 type BoltDB struct {
+	dbpath  string
 	db      *bolt.DB
 	buckets map[string]*BoltBucket
 }
@@ -30,6 +31,7 @@ func NewDB(path string) (*BoltDB, error) {
 	}
 
 	b := &BoltDB{
+		dbpath:  path,
 		db:      db,
 		buckets: make(map[string]*BoltBucket),
 	}
