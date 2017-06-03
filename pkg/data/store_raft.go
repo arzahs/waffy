@@ -292,6 +292,12 @@ func (s *Raft) applyCmd(cmd *command) (*fsmResponse, error) {
 // fsm is for log replication
 type fsm Raft
 
+func (sm *fsm) bucket(path string) (Bucket, error) {
+	r := (*Raft)(sm)
+
+	return r.bucket(path)
+}
+
 // Apply takes a command from the latest Log, and applies it to the store
 func (sm *fsm) Apply(l *raft.Log) interface{} {
 	var cmd command
@@ -302,7 +308,7 @@ func (sm *fsm) Apply(l *raft.Log) interface{} {
 	var b Bucket
 	if cmd.BucketPath != "" {
 		var err error
-		b, err = (&Raft(sm)).bucket(cmd.BucketPath)
+		b, err = sm.bucket(cmd.BucketPath)
 		if err != nil {
 			return &fsmResponse{error: fmt.Errorf("unable to find bucket %s", cmd.BucketPath)}
 		}
