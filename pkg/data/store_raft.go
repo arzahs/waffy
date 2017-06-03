@@ -373,12 +373,12 @@ func (sm *fsm) Restore(rc io.ReadCloser) error {
 			return err
 		}
 
-		err = ioutil.WriteFile(store.dbpath, storeBytes, 0600)
+		err = ioutil.WriteFile(store.db.Path(), storeBytes, 0600)
 		if err != nil {
 			return err
 		}
 
-		store, err = NewDB(store.dbpath)
+		store, err = NewDB(store.db.Path())
 		if err != nil {
 			return nil
 		}
