@@ -85,6 +85,9 @@ func NewRaft(raftDir, raftListen string, s Store) (Consensus, error) {
 
 	fileLog := filepath.Join(raftDir, "raft.db")
 	logs, err := raftboltdb.NewBoltStore(fileLog)
+	if err != nil {
+		return nil, err
+	}
 
 	r := &Raft{
 		s:    s,
@@ -460,7 +463,6 @@ func (sm *fsm) Restore(rc io.ReadCloser) error {
 		return fmt.Errorf("unable to read snapshot: %s", err)
 	}
 	path := sm.s.(*BoltDB).db.Path()
-	store := sm.s.(*BoltDB)
 
 	err = ioutil.WriteFile(path, storeBytes, 0600)
 	if err != nil {
@@ -472,7 +474,7 @@ func (sm *fsm) Restore(rc io.ReadCloser) error {
 		return err
 	}
 
-	store, err = NewDB(path)
+	store, err := NewDB(path)
 	if err != nil {
 		return fmt.Errorf("unable to open new database: %s", err)
 	}
@@ -495,19 +497,25 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.WriteTo(b)
 		if err != nil {
-			sink.Cancel()
+			if err := sink.Cancel(); err != nil {
+				return err
+			}
 			return fmt.Errorf("failed to write transaction: %s", err)
 		}
 
 		if _, err := sink.Write(b.Bytes()); err != nil {
-			sink.Cancel()
+			if err := sink.Cancel(); err != nil {
+				return err
+			}
 			return fmt.Errorf("error writing bytes to sink: %s", err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		sink.Cancel()
+		if err := sink.Cancel(); err != nil {
+			return err
+		}
 		return fmt.Errorf("unable to dump database: %s", err)
 	}
 

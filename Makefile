@@ -54,7 +54,9 @@ lint-next: install
 	gometalinter \
 		--concurrency=2 --deadline=1m --sort=path \
 		--disable=dupl --disable=vetshadow --enable=misspell \
-		./pkg/...
+		--disable=unconvert \
+		--exclude=".*\.pb\.go" --exclude=".*_test.go" \
+		--cyclo-over=12 ./pkg/...
 
 # Tests
 

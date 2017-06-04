@@ -82,10 +82,3 @@ func NewCertificateAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, er
 
 	return ca, privKey, nil
 }
-
-// LoadCertificateAuthorityPool loads a certificate pool with a given CA cert in it
-func LoadCertificateAuthorityPool(ca *x509.Certificate) *x509.CertPool {
-	pool := x509.NewCertPool()
-	pool.AddCert(ca)
-	return pool
-}

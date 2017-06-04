@@ -73,13 +73,9 @@ func (d *BoltDB) DeleteBucket(name string) error {
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		return tx.DeleteBucket(bucketName)
 	})
-	if err != nil {
-		return err
-	}
-
 	delete(d.buckets, name)
 
-	return nil
+	return err
 }
 
 // Bucket creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
@@ -90,11 +86,7 @@ func (s *BoltBucket) Bucket(name string) (Bucket, error) {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		_, err := s.bucket(tx, []byte(name))
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	})
 	if err != nil {
 		return nil, err
@@ -237,7 +229,7 @@ func (s *BoltBucket) Delete(n Node) error {
 		}
 
 		if n.Value != nil {
-			bucket.ForEach(func(k, v []byte) error {
+			return bucket.ForEach(func(k, v []byte) error {
 				if bytes.Equal(v, n.Value) {
 					return bucket.Delete(k)
 				}

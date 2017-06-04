@@ -76,11 +76,6 @@ func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
 	return x509.ParseCertificate(cert)
 }
 
-type privateKey struct {
-	N *big.Int
-	E int
-}
-
 func keyAndSubjectID(key crypto.PrivateKey) (*rsa.PrivateKey, []byte, error) {
 	rsaKey, ok := key.(*rsa.PrivateKey)
 	if !ok {

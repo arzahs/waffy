@@ -1,12 +1,11 @@
 package waffyd
 
 import (
-	"fmt"
-	"strconv"
-
 	"crypto/rsa"
-
+	"crypto/x509"
+	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
@@ -51,7 +50,6 @@ func createUser(ctx *cli.Context) error {
 	fullName := ctx.String("full-name")
 	email := ctx.String("email")
 	roleStr := ctx.String("role")
-	var role users.Role
 
 	if fullName == "" || email == "" || roleStr == "" {
 		return fmt.Errorf("--full-name, --email and --role are required")
@@ -75,42 +73,9 @@ func createUser(ctx *cli.Context) error {
 
 	// create the user if not (or we want to overwrite)
 	if write {
-		roleID, err := strconv.Atoi(roleStr)
-		if err != nil {
-			return fmt.Errorf("unknown role: %s", roleStr)
-		}
-		switch roleID {
-		case 0:
-			role = users.Role_USER
-		case 1:
-			role = users.Role_ADMIN
-		default:
-			return fmt.Errorf("unknown role ID: %d", roleID)
-		}
-
-		u := users.User{
-			Name:  fullName,
-			Email: email,
-			Role:  role,
-		}
-
-		ca, caKey, err := config.LoadCA()
+		u, cert, key, err := _newUser(fullName, email, roleStr, ctx.Int("key-size"))
 		if err != nil {
 			return err
-		}
-
-		key, err := crypto.NewPrivateKey(ctx.Int("key-size"))
-		if err != nil {
-			return err
-		}
-
-		cert, err := crypto.NewCertificate(ca, caKey, key, false, u.Email)
-		u.Certificate = &certificates.Certificate{
-			Subject: &certificates.Subject{
-				Email: u.Email,
-			},
-			SerialNumber: cert.SerialNumber.Bytes(),
-			Certificate:  crypto.EncodePEM(cert),
 		}
 
 		err = repository.CreateCertificate(db, u.Certificate)
@@ -118,14 +83,61 @@ func createUser(ctx *cli.Context) error {
 			return err
 		}
 
-		err = config.SaveClientCert(u.Email, cert, key.(*rsa.PrivateKey))
+		err = config.SaveClientCert(u.Email, cert, key)
 		if err != nil {
 			return err
 		}
-
-		return repository.CreateUser(db, &u)
+		return repository.CreateUser(db, u)
 	}
 
 	log.Fatalf("Unable to create user %s since they already exist. --overwrite to force\n", email)
 	return nil
+}
+
+func _newUser(name, email, roleStr string, keySize int) (*users.User, *x509.Certificate, *rsa.PrivateKey, error) {
+	var role users.Role
+
+	roleID, err := strconv.Atoi(roleStr)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("unknown role: %s", roleStr)
+	}
+	switch roleID {
+	case 0:
+		role = users.Role_USER
+	case 1:
+		role = users.Role_ADMIN
+	default:
+		return nil, nil, nil, fmt.Errorf("unknown role ID: %d", roleID)
+	}
+
+	u := users.User{
+		Name:  name,
+		Email: email,
+		Role:  role,
+	}
+
+	ca, caKey, err := config.LoadCA()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	key, err := crypto.NewPrivateKey(keySize)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	cert, err := crypto.NewCertificate(ca, caKey, key, false, u.Email)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	u.Certificate = &certificates.Certificate{
+		Subject: &certificates.Subject{
+			Email: u.Email,
+		},
+		SerialNumber: cert.SerialNumber.Bytes(),
+		Certificate:  crypto.EncodePEM(cert),
+	}
+
+	return &u, cert, key.(*rsa.PrivateKey), nil
 }

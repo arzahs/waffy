@@ -2,6 +2,7 @@ package waffyd
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 
@@ -30,7 +31,9 @@ func start(c *cli.Context) {
 		log.Fatalf("unable to load CA cert: %s", err)
 	}
 
-	pool := crypto.LoadCertificateAuthorityPool(ca)
+	pool := x509.NewCertPool()
+	pool.AddCert(ca)
+
 	keypair, err := loadServerKeypair(cfg.RPCName)
 	if err != nil {
 		log.Fatalf("unable to load server keypair: %s", err)

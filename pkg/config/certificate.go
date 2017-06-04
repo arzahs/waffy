@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,8 +15,7 @@ import (
 
 // SaveCA saves the certificate to the filesystem
 func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
-	var err error
-	err = saveCert("ca.crt", certificate)
+	err := saveCert("ca.crt", certificate)
 	if err != nil {
 		return fmt.Errorf("unable to save ca certificate: %s", err)
 	}
@@ -61,12 +61,7 @@ func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error 
 	}
 
 	keyFile := filepath.Join("users", email, "user.key")
-	err = saveKey(keyFile, k)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return saveKey(keyFile, k)
 }
 
 // SaveCert saves the certificate data to the file system
@@ -134,11 +129,13 @@ func saveCert(filename string, certificate *x509.Certificate) error {
 		Type:  "CERTIFICATE",
 		Bytes: certificate.Raw,
 	}
-	pem.Encode(w, &block)
+	if err := pem.Encode(w, &block); err != nil {
+		return err
+	}
 	return w.Flush()
 }
 
-func loadCert(f *os.File) (*x509.Certificate, error) {
+func loadCert(f io.Reader) (*x509.Certificate, error) {
 	block, err := decodePEMBlock(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode certificate PEM block: %s", err)
@@ -147,7 +144,7 @@ func loadCert(f *os.File) (*x509.Certificate, error) {
 	return x509.ParseCertificate(block.Bytes)
 }
 
-func loadKey(f *os.File) (crypto.PrivateKey, error) {
+func loadKey(f io.Reader) (crypto.PrivateKey, error) {
 	block, err := decodePEMBlock(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode key PEM block: %s", err)
@@ -156,7 +153,7 @@ func loadKey(f *os.File) (crypto.PrivateKey, error) {
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
 
-func decodePEMBlock(f *os.File) (*pem.Block, error) {
+func decodePEMBlock(f io.Reader) (*pem.Block, error) {
 	certBytes, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read certificate file: %s", err)
@@ -178,7 +175,9 @@ func ensureFile(filename string) (*os.File, error) {
 
 	if _, err := os.Stat(cfg.CertPath); err != nil {
 		if os.IsNotExist(err) {
-			os.MkdirAll(cfg.CertPath, 0744)
+			if err := os.MkdirAll(cfg.CertPath, 0700); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -191,7 +190,7 @@ func ensureFile(filename string) (*os.File, error) {
 	dir, fName := filepath.Split(filename)
 	if fName != "" {
 		dir := filepath.Join(cfg.CertPath, dir)
-		if err := os.MkdirAll(dir, 0744); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			if !os.IsExist(err) || !os.IsNotExist(err) {
 				return nil, err
 			}
