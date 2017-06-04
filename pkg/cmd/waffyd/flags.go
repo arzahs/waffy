@@ -7,14 +7,15 @@ import (
 )
 
 const (
-	DEFAULT_BITS = 4096
+	// DefaultBits is the default bitsize to use for certificate generation
+	DefaultBits = 4096
 )
 
 var certificateFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "key-size",
 		Usage: "Key size to use for the CA",
-		Value: strconv.Itoa(DEFAULT_BITS),
+		Value: strconv.Itoa(DefaultBits),
 	},
 	cli.BoolFlag{
 		Name:  "overwrite",

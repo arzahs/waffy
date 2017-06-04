@@ -37,6 +37,8 @@ type ValueFinder interface {
 	Seek(k []byte) ([]byte, error)
 }
 
+// Store is a storage service, that can store data in a tree-like structure
+// using Buckets
 type Store interface {
 	Bucket(name string) (Bucket, error)
 	DeleteBucket(name string) error
@@ -55,6 +57,7 @@ type Bucket interface {
 	ValueFinder
 }
 
+// Consensus is a Store that has multi-node consensus
 type Consensus interface {
 	Bucket
 

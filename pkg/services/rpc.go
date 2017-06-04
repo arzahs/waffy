@@ -15,6 +15,7 @@ type baseHandler struct {
 	db data.Bucket
 }
 
+// Serve blocks and services the RPC
 func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error {
 	lis, err := net.Listen("tcp", listen)
 	if err != nil {

@@ -50,7 +50,7 @@ func EncodePEM(keydata interface{}) []byte {
 
 // x590CertificateAuthority generates generates a new *x590.Certificate
 func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
-	rsaKey, subjectId, err := keyAndSubjectId(key)
+	rsaKey, subjectID, err := keyAndSubjectID(key)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
 		ExtKeyUsage: nil,
 
 		IsCA:         true,
-		SubjectKeyId: subjectId[:],
+		SubjectKeyId: subjectID[:],
 	}
 
 	cert, err := x509.CreateCertificate(rand.Reader, &template, &template, &rsaKey.PublicKey, rsaKey)
@@ -81,22 +81,22 @@ type privateKey struct {
 	E int
 }
 
-func keyAndSubjectId(key crypto.PrivateKey) (*rsa.PrivateKey, []byte, error) {
+func keyAndSubjectID(key crypto.PrivateKey) (*rsa.PrivateKey, []byte, error) {
 	rsaKey, ok := key.(*rsa.PrivateKey)
 	if !ok {
 		return nil, nil, fmt.Errorf("unable to parse private key for generation")
 	}
 
-	subjectKeyId, err := subjectKeyId(rsaKey.PublicKey)
+	subjectKeyID, err := getSubjectKeyID(rsaKey.PublicKey)
 	if err == nil {
 		return nil, nil, fmt.Errorf("unable to parse SubjectKeyID: %s", err)
 	}
 
-	return rsaKey, subjectKeyId, nil
+	return rsaKey, subjectKeyID, nil
 }
 
-// x509SubjectKeyId returns a suitable Subject
-func subjectKeyId(pub crypto.PublicKey) ([]byte, error) {
+// getSubjectKeyID returns a suitable Subject
+func getSubjectKeyID(pub crypto.PublicKey) ([]byte, error) {
 	cert, ok := pub.(*rsa.PublicKey)
 	if !ok {
 		return nil, fmt.Errorf("unable to parse public key for SubjectKeyId")

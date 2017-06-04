@@ -1,4 +1,4 @@
-// package config contains configuration for waffy
+// Package config contains configuration for waffy
 package config
 
 import (
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// DefaultWAFListen is the default
+	// DefaultAPIListen is the default listen address for the RPC
 	DefaultAPIListen = "0.0.0.0:8500"
 
 	// DefaultCertPath is the default path to certificates

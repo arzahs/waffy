@@ -6,6 +6,8 @@ import (
 
 	"crypto/rsa"
 
+	"log"
+
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/data"
@@ -73,17 +75,17 @@ func createUser(ctx *cli.Context) error {
 
 	// create the user if not (or we want to overwrite)
 	if write {
-		roleId, err := strconv.Atoi(roleStr)
+		roleID, err := strconv.Atoi(roleStr)
 		if err != nil {
 			return fmt.Errorf("unknown role: %s", roleStr)
 		}
-		switch roleId {
+		switch roleID {
 		case 0:
 			role = users.Role_USER
 		case 1:
 			role = users.Role_ADMIN
 		default:
-			return fmt.Errorf("unknown role ID: %d", roleId)
+			return fmt.Errorf("unknown role ID: %d", roleID)
 		}
 
 		u := users.User{
@@ -122,9 +124,8 @@ func createUser(ctx *cli.Context) error {
 		}
 
 		return repository.CreateUser(db, &u)
-	} else {
-		fmt.Printf("Unable to create user %s since they already exist. --overwrite to force\n", email)
 	}
 
+	log.Fatalf("Unable to create user %s since they already exist. --overwrite to force\n", email)
 	return nil
 }

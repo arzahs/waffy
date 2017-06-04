@@ -9,8 +9,10 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
+// Cmds are the cli.Commands that are Commands on the waffy App
 var Cmds []cli.Command
 
+// Start starts the waffyd toold
 func Start() error {
 	cfg, err := config.Load()
 	if err != nil {

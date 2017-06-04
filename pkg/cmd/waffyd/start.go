@@ -30,7 +30,7 @@ func start(c *cli.Context) {
 		log.Fatalf("unable to load CA cert: %s", err)
 	}
 
-	pool := crypto.LoadCertificateAuthrotityPool(ca)
+	pool := crypto.LoadCertificateAuthorityPool(ca)
 	keypair, err := loadServerKeypair(cfg.RPCName)
 	if err != nil {
 		log.Fatalf("unable to load server keypair: %s", err)

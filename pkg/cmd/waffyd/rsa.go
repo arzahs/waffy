@@ -120,8 +120,8 @@ func gencert(ctx *cli.Context) error {
 			},
 		}
 		return repository.CreateCertificate(db, c)
-	} else {
-		log.Fatalf("unable to save certificate for %s, already exists. --overwrite to force", cn)
 	}
+
+	log.Fatalf("unable to save certificate for %s, already exists. --overwrite to force", cn)
 	return nil
 }

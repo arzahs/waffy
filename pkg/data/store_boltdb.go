@@ -37,7 +37,7 @@ func NewDB(path string) (*BoltDB, error) {
 	return b, nil
 }
 
-// Store returns a new base bucket on the BoltDB store
+// Bucket returns a new base bucket on the BoltDB store
 func (d *BoltDB) Bucket(name string) (Bucket, error) {
 	bucketName := []byte(name)
 
@@ -82,7 +82,7 @@ func (d *BoltDB) DeleteBucket(name string) error {
 	return nil
 }
 
-// Store creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
+// Bucket creates (or fetches) a BoltBucket with the given name, from this leaf BoltBucket
 func (s *BoltBucket) Bucket(name string) (Bucket, error) {
 	if b, ok := s.buckets[name]; ok {
 		return b, nil

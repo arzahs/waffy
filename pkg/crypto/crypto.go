@@ -17,6 +17,7 @@ const (
 	hostKeyUsage = x509.KeyUsageKeyEncipherment | x509.KeyUsageDataEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement
 )
 
+// NewCertificate generates a new x509 Certificate, signed by a given CA
 func NewCertificate(
 	ca *x509.Certificate,
 	signer crypto.PrivateKey,
@@ -25,7 +26,7 @@ func NewCertificate(
 	commonName string,
 	alt ...string,
 ) (*x509.Certificate, error) {
-	rsaKey, subjectId, err := keyAndSubjectId(signee)
+	rsaKey, subjectID, err := keyAndSubjectID(signee)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func NewCertificate(
 			x509.ExtKeyUsageServerAuth,
 			x509.ExtKeyUsageClientAuth,
 		},
-		SubjectKeyId: subjectId,
+		SubjectKeyId: subjectID,
 	}
 
 	if server {
@@ -67,6 +68,7 @@ func NewCertificate(
 	return x509.ParseCertificate(cert)
 }
 
+// NewCertificateAuthority generates a new x509 certificate that can be used as a CA
 func NewCertificateAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, error) {
 	privKey, err := NewPrivateKey(bits)
 	if err != nil {
@@ -81,7 +83,8 @@ func NewCertificateAuthority(bits int) (*x509.Certificate, crypto.PrivateKey, er
 	return ca, privKey, nil
 }
 
-func LoadCertificateAuthrotityPool(ca *x509.Certificate) *x509.CertPool {
+// LoadCertificateAuthorityPool loads a certificate pool with a given CA cert in it
+func LoadCertificateAuthorityPool(ca *x509.Certificate) *x509.CertPool {
 	pool := x509.NewCertPool()
 	pool.AddCert(ca)
 	return pool

@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-// SaveCert saves the certificate to the filesystem
+// SaveCA saves the certificate to the filesystem
 func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
 	var err error
 	err = saveCert("ca.crt", certificate)
@@ -52,7 +52,7 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 	return cert, key, nil
 }
 
-// SaveClient saves a client Certificate to the filesystem
+// SaveClientCert saves a client Certificate to the filesystem
 func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error {
 	certFile := filepath.Join("users", email, "user.crt")
 	err := saveCert(certFile, c)

@@ -54,6 +54,7 @@ type Raft struct {
 	l *sync.Mutex
 }
 
+// NewRaft creates a new Raft Consensus Store, with data backed on a given Store
 func NewRaft(raftDir, raftListen string, s Store) (Consensus, error) {
 	raftConfig := raft.DefaultConfig()
 
@@ -110,6 +111,7 @@ func NewRaft(raftDir, raftListen string, s Store) (Consensus, error) {
 	return r, nil
 }
 
+// WaitForLeader will wait until timeout t for a leader
 func (s *Raft) WaitForLeader(t time.Duration) error {
 	waiter := time.NewTicker(indexWaiterTime)
 	defer waiter.Stop()
@@ -153,7 +155,7 @@ func (s *Raft) waitForIndex(idx uint64, t time.Duration) error {
 	}
 }
 
-// Store returns a new Store Bucket (that implements Consensus as well)
+// Bucket returns a new Store Bucket (that implements Consensus as well)
 func (s *Raft) Bucket(name string) (Bucket, error) {
 	path := fmt.Sprintf("%s%s/", s.path, name)
 
@@ -190,6 +192,7 @@ func (s *Raft) DeleteBucket(name string) error {
 	return f.error
 }
 
+// Close closes the store, and shuts the the Raft connection down
 func (s *Raft) Close() error {
 	if err := s.s.Close(); err != nil {
 		return err
