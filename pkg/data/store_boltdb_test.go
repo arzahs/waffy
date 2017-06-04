@@ -84,7 +84,7 @@ func TestBoltDB(t *testing.T) {
 					err := b.Delete(Node{
 						Value: setNodeC.Value,
 					})
-					So(err, ShouldNotBeNil)
+					So(err, ShouldBeNil)
 				})
 			})
 		})
