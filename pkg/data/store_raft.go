@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"bytes"
+
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/raft"
 	"github.com/hashicorp/raft-boltdb"
@@ -450,37 +452,30 @@ func (sm *fsm) Snapshot() (raft.FSMSnapshot, error) {
 
 // Restore restores the database from a snapshot
 func (sm *fsm) Restore(rc io.ReadCloser) error {
-	defer rc.Close()
-
-	switch store := sm.s.(type) {
-	case *BoltDB:
-		err := sm.s.Close()
-		if err != nil {
-			return err
-		}
-
-		var storeBytes []byte
-		_, err = rc.Read(storeBytes)
-		if err != nil {
-			return err
-		}
-
-		err = ioutil.WriteFile(store.db.Path(), storeBytes, 0600)
-		if err != nil {
-			return err
-		}
-
-		store, err = NewDB(store.db.Path())
-		if err != nil {
-			return nil
-		}
-
-		sm.s = Store(store)
-
-		return nil
-	case *BoltBucket:
-		return fmt.Errorf("restore not possible on a *BoltBucket")
+	storeBytes, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return fmt.Errorf("unable to read snapshot: %s", err)
 	}
+	path := sm.s.(*BoltDB).db.Path()
+	store := sm.s.(*BoltDB)
+
+	err = ioutil.WriteFile(path, storeBytes, 0600)
+	if err != nil {
+		return fmt.Errorf("unable to write new database path: %s", err)
+	}
+
+	err = sm.s.Close()
+	if err != nil {
+		return err
+	}
+
+	store, err = NewDB(path)
+	if err != nil {
+		return fmt.Errorf("unable to open new database: %s", err)
+	}
+
+	sm.s = store
+
 	return nil
 }
 
@@ -491,17 +486,29 @@ type fsmSnapshot struct {
 
 // Persist stores the bytes of the database to the Raft sink
 func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
-	switch store := s.s.(type) {
-	case *BoltDB:
-		return store.db.View(func(tx *bolt.Tx) error {
-			_, err := tx.WriteTo(sink)
-			return err
-		})
-	case *BoltBucket:
-		return fmt.Errorf("persist not possibly on a *BoltBucket")
+	b := new(bytes.Buffer)
+	store := s.s.(*BoltDB)
+
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.WriteTo(b)
+		if err != nil {
+			sink.Cancel()
+			return fmt.Errorf("failed to write transaction: %s", err)
+		}
+
+		if _, err := sink.Write(b.Bytes()); err != nil {
+			sink.Cancel()
+			return fmt.Errorf("error writing bytes to sink: %s", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		sink.Cancel()
+		return fmt.Errorf("unable to dump database: %s", err)
 	}
 
-	return nil
+	return sink.Close()
 }
 
 // Release is a no-op
