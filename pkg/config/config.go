@@ -20,6 +20,12 @@ const (
 
 	// DefaultRPCName is the hostname of the RPC
 	DefaultRPCName = "waffy.local"
+
+	// DefaultRaftDIR is the default Raft configuration directory
+	DefaultRaftDIR = "./etc/raft"
+
+	// DefaultRaftListen is the default Raft listen address
+	DefaultRaftListen = "127.0.0.1:8501"
 )
 
 // Version is the version of the software
@@ -41,6 +47,12 @@ type Config struct {
 
 	// Version is the version currently running
 	Version string
+
+	// RaftDIR is the directory for Raft peer and log storage
+	RaftDIR string
+
+	// RaftListen is the listen address of the Raft consensus
+	RaftListen string
 }
 
 var cfg *Config
@@ -52,10 +64,12 @@ func init() {
 	}
 
 	cfg = &Config{
-		APIListen: getEnv("WAFFY_API_LISTEN", c, DefaultAPIListen),
-		CertPath:  getEnv("WAFFY_CERT_PATH", c, DefaultCertPath),
-		DBPath:    getEnv("WAFFY_DB_PATH", c, DefaultDBPath),
-		RPCName:   getEnv("WAFFY_RPC_NAME", c, DefaultRPCName),
+		APIListen:  getEnv("WAFFY_API_LISTEN", c, DefaultAPIListen),
+		CertPath:   getEnv("WAFFY_CERT_PATH", c, DefaultCertPath),
+		DBPath:     getEnv("WAFFY_DB_PATH", c, DefaultDBPath),
+		RPCName:    getEnv("WAFFY_RPC_NAME", c, DefaultRPCName),
+		RaftDIR:    getEnv("WAFFY_RAFT_DIR", c, DefaultRaftDIR),
+		RaftListen: getEnv("WAFFY_RAFT_LISTEN", c, DefaultRaftListen),
 
 		Version: Version,
 	}
