@@ -286,7 +286,7 @@ func (s *BoltBucket) Seek(k []byte) ([]byte, error) {
 		c := bucket.Cursor()
 		var key []byte
 		key, value = c.Seek(k)
-		if key == nil {
+		if key == nil || value == nil {
 			return fmt.Errorf("key %s not found", k)
 		}
 
