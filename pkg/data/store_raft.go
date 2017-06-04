@@ -348,7 +348,7 @@ func (s *Raft) bucket(path string) (Bucket, error) {
 		return nil, err
 	}
 
-	for _, bName := range paths {
+	for _, bName := range paths[1:] {
 		var err error
 		b, err = b.Bucket(bName)
 		if err != nil {
@@ -407,7 +407,7 @@ func (sm *fsm) Apply(l *raft.Log) interface{} {
 
 	switch cmd.Op {
 	case opBucket:
-		_, err := b.Bucket(cmd.BucketPath)
+		_, err := sm.bucket(cmd.BucketPath)
 		return &fsmResponse{error: err}
 	case opDeleteBucket:
 		err := b.DeleteBucket(string(cmd.Key))
