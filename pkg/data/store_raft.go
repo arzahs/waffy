@@ -287,10 +287,10 @@ func (s *Raft) ListWeak() ([]Node, error) {
 	return b.List()
 }
 
-// Seek fins a value in the Bucket by key k
+// Seek finds a value in the Bucket by key k
 func (s *Raft) Seek(k []byte) ([]byte, error) {
 	f, err := s.applyCmd(&command{
-		Op:         opSet,
+		Op:         opSeek,
 		Key:        k,
 		BucketPath: s.path,
 	})
