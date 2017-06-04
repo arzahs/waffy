@@ -14,9 +14,9 @@ message Node {
 }
 
 // Node service for node management
-service Node {
+service JoinService {
     // Join a node to the consensus
-    rpc Join(JoinRequest) returns (JoinResponse)
+    rpc Join(JoinRequest) returns (JoinResponse);
 }
 
 message JoinRequest {
