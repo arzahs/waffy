@@ -39,13 +39,13 @@ func init() {
 						Usage: "The user's role",
 					},
 				),
-				Action: createUser,
+				Action: withConsensus(createUser),
 			},
 		},
 	})
 }
 
-func createUser(ctx *cli.Context) error {
+func createUser(ctx *cli.Context, db data.Consensus) error {
 	// check required fields
 	fullName := ctx.String("full-name")
 	email := ctx.String("email")
@@ -53,16 +53,6 @@ func createUser(ctx *cli.Context) error {
 
 	if fullName == "" || email == "" || roleStr == "" {
 		return fmt.Errorf("--full-name, --email and --role are required")
-	}
-
-	cfg, err := config.Load()
-	if err != nil {
-		return err
-	}
-
-	db, err := data.NewDB(cfg.DBPath)
-	if err != nil {
-		return err
 	}
 
 	write := ctx.Bool("overwrite")

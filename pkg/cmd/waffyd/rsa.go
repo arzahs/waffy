@@ -32,7 +32,7 @@ func init() {
 					Name:  "common-name",
 					Usage: "Common Name of the server for the certificate",
 				}),
-				Action: gencert,
+				Action: withConsensus(gencert),
 			},
 		},
 	})
@@ -63,7 +63,7 @@ func genca(ctx *cli.Context) {
 	}
 }
 
-func gencert(ctx *cli.Context) error {
+func gencert(ctx *cli.Context, db data.Consensus) error {
 	write := ctx.Bool("overwrite")
 	cn := ctx.String("common-name")
 	if cn == "" {
@@ -101,15 +101,6 @@ func gencert(ctx *cli.Context) error {
 		}
 		if err := config.SaveCert(cn, cert); err != nil {
 			log.Fatalf("unable to save certificate: %s", err)
-		}
-
-		cfg, err := config.Load()
-		if err != nil {
-			return err
-		}
-		db, err := data.NewDB(cfg.DBPath)
-		if err != nil {
-			return err
 		}
 
 		c := &certificates.Certificate{
