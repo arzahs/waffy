@@ -17,6 +17,8 @@ message Node {
 service JoinService {
     // Join a node to the consensus
     rpc Join(JoinRequest) returns (JoinResponse);
+    // Leave a node to the consensus
+    rpc Leave(LeaveRequest) returns (LeaveResponse);
 }
 
 message JoinRequest {
@@ -25,4 +27,12 @@ message JoinRequest {
 
 message JoinResponse {
     string error = 1; // error if the join failed
+}
+
+message LeaveRequest {
+    string url = 1; // url for consensus
+}
+
+message LeaveResponse {
+    string error = 1; // error if the leave failed
 }
