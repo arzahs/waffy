@@ -6,14 +6,9 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/unerror/waffy/pkg/data"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
-
-type baseHandler struct {
-	db data.Bucket
-}
 
 // Serve blocks and services the RPC
 func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error {
