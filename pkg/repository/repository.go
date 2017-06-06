@@ -33,3 +33,10 @@ func Seek(b data.ValueFinder, k []byte, u proto.Unmarshaler) error {
 
 	return u.Unmarshal(mBytes)
 }
+
+// DeleteByKey removes a Node in the bucket b my key k
+func DeleteByKey(b data.ValueDeleter, k []byte) error {
+	return b.Delete(data.Node{
+		Key: k,
+	})
+}
