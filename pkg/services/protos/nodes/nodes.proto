@@ -9,6 +9,7 @@ import "github.com/unerror/waffy/pkg/services/protos/certificates/certificates.p
 // Node represents a load balancer node
 message Node {
     string hostname = 1; // hostname is the hostname of the IP address
+    bool leader = 3; // if this node is considered the Leader
 
     certificates.Certificate certificate = 2; // certificate is the Node's authentication certificate
 }
@@ -22,25 +23,17 @@ service JoinService {
 }
 
 message JoinRequest {
-    string hostname = 1; //Hostname of node
-    string url = 2; // url for consensus
-    bytes signature = 3; //certifiace
+    string hostname = 1; // Hostname of node
 }
 
 message JoinResponse {
     string hostname = 1; //Hostname of node
-    bytes signature = 2; //certifiace
-    string error = 3; // error if the join failed
 }
 
 message LeaveRequest {
     string hostname = 1; //Hostname of node
-    string url = 2; // url for consensus
-    bytes signature = 3; //certifiace
 }
 
 message LeaveResponse {
     string hostname = 1; //Hostname of node
-    bytes signature = 2; //certifiace
-    string error = 3; // error if the leave failed
 }
