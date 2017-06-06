@@ -22,17 +22,25 @@ service JoinService {
 }
 
 message JoinRequest {
-    string url = 1; // url for consensus
+    string hostname = 1; //Hostname of node
+    string url = 2; // url for consensus
+    bytes signature = 3; //certifiace
 }
 
 message JoinResponse {
-    string error = 1; // error if the join failed
+    string hostname = 1; //Hostname of node
+    bytes signature = 2; //certifiace
+    string error = 3; // error if the join failed
 }
 
 message LeaveRequest {
-    string url = 1; // url for consensus
+    string hostname = 1; //Hostname of node
+    string url = 2; // url for consensus
+    bytes signature = 3; //certifiace
 }
 
 message LeaveResponse {
-    string error = 1; // error if the leave failed
+    string hostname = 1; //Hostname of node
+    bytes signature = 2; //certifiace
+    string error = 3; // error if the leave failed
 }

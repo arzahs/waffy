@@ -65,13 +65,22 @@ func (m *Node) GetCertificate() *certificates.Certificate {
 }
 
 type JoinRequest struct {
-	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	Hostname  string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Url       string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Signature []byte `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
 }
 
 func (m *JoinRequest) Reset()                    { *m = JoinRequest{} }
 func (m *JoinRequest) String() string            { return proto.CompactTextString(m) }
 func (*JoinRequest) ProtoMessage()               {}
 func (*JoinRequest) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{1} }
+
+func (m *JoinRequest) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
 
 func (m *JoinRequest) GetUrl() string {
 	if m != nil {
@@ -80,14 +89,37 @@ func (m *JoinRequest) GetUrl() string {
 	return ""
 }
 
+func (m *JoinRequest) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
+
 type JoinResponse struct {
-	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Hostname  string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Signature []byte `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	Error     string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *JoinResponse) Reset()                    { *m = JoinResponse{} }
 func (m *JoinResponse) String() string            { return proto.CompactTextString(m) }
 func (*JoinResponse) ProtoMessage()               {}
 func (*JoinResponse) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{2} }
+
+func (m *JoinResponse) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
+
+func (m *JoinResponse) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
 
 func (m *JoinResponse) GetError() string {
 	if m != nil {
@@ -97,13 +129,22 @@ func (m *JoinResponse) GetError() string {
 }
 
 type LeaveRequest struct {
-	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	Hostname  string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Url       string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Signature []byte `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
 }
 
 func (m *LeaveRequest) Reset()                    { *m = LeaveRequest{} }
 func (m *LeaveRequest) String() string            { return proto.CompactTextString(m) }
 func (*LeaveRequest) ProtoMessage()               {}
 func (*LeaveRequest) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{3} }
+
+func (m *LeaveRequest) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
 
 func (m *LeaveRequest) GetUrl() string {
 	if m != nil {
@@ -112,14 +153,37 @@ func (m *LeaveRequest) GetUrl() string {
 	return ""
 }
 
+func (m *LeaveRequest) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
+
 type LeaveResponse struct {
-	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Hostname  string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Signature []byte `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	Error     string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *LeaveResponse) Reset()                    { *m = LeaveResponse{} }
 func (m *LeaveResponse) String() string            { return proto.CompactTextString(m) }
 func (*LeaveResponse) ProtoMessage()               {}
 func (*LeaveResponse) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{4} }
+
+func (m *LeaveResponse) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
+
+func (m *LeaveResponse) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
 
 func (m *LeaveResponse) GetError() string {
 	if m != nil {
@@ -294,11 +358,23 @@ func (m *JoinRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Url) > 0 {
+	if len(m.Hostname) > 0 {
 		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
+		i += copy(dAtA[i:], m.Hostname)
+	}
+	if len(m.Url) > 0 {
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNodes(dAtA, i, uint64(len(m.Url)))
 		i += copy(dAtA[i:], m.Url)
+	}
+	if len(m.Signature) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Signature)))
+		i += copy(dAtA[i:], m.Signature)
 	}
 	return i, nil
 }
@@ -318,8 +394,20 @@ func (m *JoinResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Error) > 0 {
+	if len(m.Hostname) > 0 {
 		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
+		i += copy(dAtA[i:], m.Hostname)
+	}
+	if len(m.Signature) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Signature)))
+		i += copy(dAtA[i:], m.Signature)
+	}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNodes(dAtA, i, uint64(len(m.Error)))
 		i += copy(dAtA[i:], m.Error)
@@ -342,11 +430,23 @@ func (m *LeaveRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Url) > 0 {
+	if len(m.Hostname) > 0 {
 		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
+		i += copy(dAtA[i:], m.Hostname)
+	}
+	if len(m.Url) > 0 {
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNodes(dAtA, i, uint64(len(m.Url)))
 		i += copy(dAtA[i:], m.Url)
+	}
+	if len(m.Signature) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Signature)))
+		i += copy(dAtA[i:], m.Signature)
 	}
 	return i, nil
 }
@@ -366,8 +466,20 @@ func (m *LeaveResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Error) > 0 {
+	if len(m.Hostname) > 0 {
 		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
+		i += copy(dAtA[i:], m.Hostname)
+	}
+	if len(m.Signature) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Signature)))
+		i += copy(dAtA[i:], m.Signature)
+	}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNodes(dAtA, i, uint64(len(m.Error)))
 		i += copy(dAtA[i:], m.Error)
@@ -419,7 +531,15 @@ func (m *Node) Size() (n int) {
 func (m *JoinRequest) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Hostname)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
 	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	l = len(m.Signature)
 	if l > 0 {
 		n += 1 + l + sovNodes(uint64(l))
 	}
@@ -429,6 +549,14 @@ func (m *JoinRequest) Size() (n int) {
 func (m *JoinResponse) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Hostname)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	l = len(m.Signature)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
 	l = len(m.Error)
 	if l > 0 {
 		n += 1 + l + sovNodes(uint64(l))
@@ -439,7 +567,15 @@ func (m *JoinResponse) Size() (n int) {
 func (m *LeaveRequest) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Hostname)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
 	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	l = len(m.Signature)
 	if l > 0 {
 		n += 1 + l + sovNodes(uint64(l))
 	}
@@ -449,6 +585,14 @@ func (m *LeaveRequest) Size() (n int) {
 func (m *LeaveResponse) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Hostname)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	l = len(m.Signature)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
 	l = len(m.Error)
 	if l > 0 {
 		n += 1 + l + sovNodes(uint64(l))
@@ -612,6 +756,35 @@ func (m *JoinRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hostname = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
 			}
 			var stringLen uint64
@@ -638,6 +811,37 @@ func (m *JoinRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = append(m.Signature[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signature == nil {
+				m.Signature = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -690,6 +894,66 @@ func (m *JoinResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hostname = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = append(m.Signature[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signature == nil {
+				m.Signature = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
@@ -770,6 +1034,35 @@ func (m *LeaveRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hostname = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
 			}
 			var stringLen uint64
@@ -796,6 +1089,37 @@ func (m *LeaveRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = append(m.Signature[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signature == nil {
+				m.Signature = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -848,6 +1172,66 @@ func (m *LeaveResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hostname = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = append(m.Signature[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signature == nil {
+				m.Signature = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
@@ -1005,7 +1389,7 @@ var (
 func init() { proto.RegisterFile("pkg/services/protos/nodes/nodes.proto", fileDescriptorNodes) }
 
 var fileDescriptorNodes = []byte{
-	// 284 bytes of a gzipped FileDescriptorProto
+	// 319 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0xc8, 0x4e, 0xd7,
 	0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0x2d, 0xd6, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0x2f, 0xd6,
 	0xcf, 0xcb, 0x4f, 0x49, 0x85, 0x92, 0x7a, 0x60, 0x21, 0x21, 0x56, 0x30, 0x47, 0xca, 0x27, 0x3d,
@@ -1014,14 +1398,16 @@ var fileDescriptorNodes = []byte{
 	0x99, 0xc9, 0x89, 0x25, 0xa9, 0xa8, 0x1c, 0x88, 0xa1, 0x4a, 0xf1, 0x5c, 0x2c, 0x7e, 0x40, 0x63,
 	0x85, 0xa4, 0xb8, 0x38, 0x32, 0xf2, 0x8b, 0x4b, 0xf2, 0x12, 0x73, 0x53, 0x25, 0x18, 0x15, 0x18,
 	0x35, 0x38, 0x83, 0xe0, 0x7c, 0x21, 0x6b, 0x2e, 0x6e, 0x24, 0x9d, 0x12, 0x4c, 0x40, 0x69, 0x6e,
-	0x23, 0x49, 0x3d, 0x14, 0xd3, 0x9c, 0x11, 0x9c, 0x20, 0x64, 0xd5, 0x4a, 0xf2, 0x5c, 0xdc, 0x5e,
-	0xf9, 0x99, 0x79, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x02, 0x5c, 0xcc, 0xa5, 0x45,
-	0x39, 0x50, 0x2b, 0x40, 0x4c, 0x25, 0x15, 0x2e, 0x1e, 0x88, 0x82, 0xe2, 0x82, 0xfc, 0xbc, 0xe2,
-	0x54, 0x21, 0x11, 0x2e, 0x56, 0xb0, 0xa7, 0xa0, 0x6a, 0x20, 0x1c, 0x25, 0x05, 0x2e, 0x1e, 0x9f,
-	0xd4, 0xc4, 0xb2, 0x54, 0xdc, 0xe6, 0xa8, 0x72, 0xf1, 0x42, 0x55, 0xe0, 0x33, 0xc8, 0xa8, 0x08,
-	0xe2, 0x9e, 0x60, 0x48, 0x38, 0x09, 0xe9, 0x73, 0xb1, 0x80, 0xb8, 0x42, 0x42, 0x7a, 0x90, 0xa0,
-	0x46, 0x72, 0xab, 0x94, 0x30, 0x8a, 0x18, 0xd4, 0x54, 0x23, 0x2e, 0x56, 0xb0, 0x35, 0x42, 0x30,
-	0x59, 0x64, 0x67, 0x49, 0x89, 0xa0, 0x0a, 0x42, 0xf4, 0x38, 0x09, 0x9c, 0x78, 0x24, 0xc7, 0x78,
-	0x01, 0x88, 0x1f, 0x00, 0xf1, 0x8c, 0xc7, 0x72, 0x0c, 0x49, 0x6c, 0xe0, 0xd0, 0x37, 0x06, 0x04,
-	0x00, 0x00, 0xff, 0xff, 0x6d, 0x56, 0x8c, 0x16, 0xfb, 0x01, 0x00, 0x00,
+	0x23, 0x49, 0x3d, 0x14, 0xd3, 0x9c, 0x11, 0x9c, 0x20, 0x64, 0xd5, 0x4a, 0x91, 0x5c, 0xdc, 0x5e,
+	0xf9, 0x99, 0x79, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x78, 0xed, 0x11, 0xe0, 0x62, 0x2e,
+	0x2d, 0xca, 0x01, 0x9b, 0xcf, 0x19, 0x04, 0x62, 0x0a, 0xc9, 0x70, 0x71, 0x16, 0x67, 0xa6, 0xe7,
+	0x25, 0x96, 0x94, 0x16, 0xa5, 0x4a, 0x30, 0x03, 0xc5, 0x79, 0x82, 0x10, 0x02, 0x4a, 0x71, 0x5c,
+	0x3c, 0x10, 0xa3, 0x8b, 0x0b, 0xf2, 0xf3, 0x8a, 0xf1, 0xfb, 0x01, 0xc5, 0x24, 0x26, 0x34, 0x93,
+	0x84, 0x44, 0xb8, 0x58, 0xc1, 0x01, 0x09, 0xb6, 0x83, 0x33, 0x08, 0xc2, 0x51, 0x8a, 0xe2, 0xe2,
+	0xf1, 0x49, 0x4d, 0x2c, 0x4b, 0xa5, 0x85, 0xdb, 0xe3, 0xb9, 0x78, 0xa1, 0x66, 0xd3, 0xc6, 0xf1,
+	0x46, 0x45, 0x90, 0x70, 0x0f, 0x86, 0xa4, 0x07, 0x21, 0x7d, 0x2e, 0x16, 0x10, 0x57, 0x48, 0x48,
+	0x0f, 0x92, 0xa4, 0x90, 0xe2, 0x44, 0x4a, 0x18, 0x45, 0x0c, 0xea, 0x1e, 0x23, 0x2e, 0x56, 0xb0,
+	0x03, 0x85, 0x60, 0xb2, 0xc8, 0x41, 0x21, 0x25, 0x82, 0x2a, 0x08, 0xd1, 0xe3, 0x24, 0x70, 0xe2,
+	0x91, 0x1c, 0xe3, 0x05, 0x20, 0x7e, 0x00, 0xc4, 0x33, 0x1e, 0xcb, 0x31, 0x24, 0xb1, 0x81, 0x53,
+	0x99, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x4f, 0x78, 0x43, 0x0b, 0xe3, 0x02, 0x00, 0x00,
 }
