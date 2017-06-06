@@ -11,10 +11,12 @@ import (
 	"github.com/unerror/waffy/pkg/services/protos/nodes"
 )
 
+// Node is the JoinService implementation for a Node
 type Node struct {
 	baseHandler
 }
 
+// Join joins a new Node to the RPC and Raft consensus
 func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinResponse, error) {
 	if _, err := repository.FindNodeByHostname(n.s, req.Url); err != nil {
 		return nil, errors.New("hostname already exists")
@@ -38,6 +40,7 @@ func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinRes
 	}, nil
 }
 
+// Leave leaves a Node from the RPC and Raft consensus
 func (n *Node) Leave(ctx context.Context, req *nodes.LeaveRequest) (*nodes.LeaveResponse, error) {
 	if err := repository.DeleteNodeByHostname(n.s, req.Url); err != nil {
 		return nil, errors.New("error deleting node in store")
