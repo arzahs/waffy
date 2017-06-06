@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/unerror/waffy/pkg/config"
+	"github.com/unerror/waffy/pkg/data"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -28,7 +30,27 @@ func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error 
 		Certificates: []tls.Certificate{keypair},
 	})
 
+	s, err := newRaft()
+	if err != nil {
+		return err
+	}
+
+	handler := baseHandler{
 	server := grpc.NewServer(grpc.Creds(creds))
 
 	return server.Serve(lis)
+}
+
+func newRaft() (data.Consensus, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	local, err := data.NewDB(cfg.DBPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.NewRaft(cfg.RaftDIR, cfg.RaftListen, local)
 }
