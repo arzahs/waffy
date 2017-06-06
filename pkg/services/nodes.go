@@ -2,69 +2,51 @@ package services
 
 import (
 	"errors"
-	"crypto/x509"
 
 	"golang.org/x/net/context"
 
-	"github.com/unerror/waffy/pkg/config"
-	"github.com/unerror/waffy/pkg/data"
+	"fmt"
+
+	"github.com/unerror/waffy/pkg/repository"
 	"github.com/unerror/waffy/pkg/services/protos/nodes"
 )
 
 type Node struct {
-	hostname string
-	certificate *x509.Certificate
-	node data.Consensus
+	baseHandler
 }
 
-func NewRaftNode() (*Node,error) {
+func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinResponse, error) {
+	if _, err := repository.FindNodeByHostname(n.s, req.Url); err != nil {
+		return nil, errors.New("hostname already exists")
+	}
 
-	n := new(Node)
+	node := &nodes.Node{
+		Hostname: req.Hostname,
+		Leader:   false, // not leader by default until election
+	}
+	if err := repository.CreateNode(n.s, node); err != nil {
+		return nil, errors.New("unable to create new node")
+	}
 
-	conf, err := config.Load()
+	err := n.s.Join(req.Url)
 	if err != nil {
-		return n, err
+		return nil, fmt.Errorf("unable to join raft node: %s", err)
 	}
 
-	certPath := conf.CertPath
-	cert, err := config.LoadCert(certPath)
-	if err != nil {
-		return n, err
-	}
-
-	store, err := data.NewDB(conf.DBPath)
-	if err != nil {
-		return n, err
-	}
-	raftDir := conf.RaftDIR
-	raftListen := conf.RaftListen
-
-	n.hostname = conf.RPCName
-	n.certificate = cert
-
-	n.node, err = data.NewRaft(raftDir,raftListen,store);
-	if err != nil{
-		return &Node{}, errors.New("Unable to connect to Raft")
-	}
-
-	return n, nil
-
-}
-
-func (n *Node) Join(ctx context.Context, req nodes.JoinRequest) (*nodes.JoinResponse, error) {
-	err := n.node.Join(req.Url)
 	return &nodes.JoinResponse{
-		Hostname: n.hostname,
-		Signature: n.certificate.Signature,
-		Error: err.Error(),
-	}, err
+		Hostname: req.Url,
+	}, nil
 }
 
-func (n *Node) Leave(ctx context.Context, req nodes.LeaveRequest) (*nodes.LeaveResponse, error) {
-	err := n.node.Leave(req.Url)
+func (n *Node) Leave(ctx context.Context, req *nodes.LeaveRequest) (*nodes.LeaveResponse, error) {
+	if err := repository.DeleteNodeByHostname(n.s, req.Url); err != nil {
+		return nil, errors.New("error deleting node in store")
+	}
+	if err := n.s.Leave(req.Url); err != nil {
+		return nil, fmt.Errorf("unable to leave raft: %s", err)
+	}
+
 	return &nodes.LeaveResponse{
-		Hostname: n.hostname,
-		Signature: n.certificate.Signature,
-		Error: err.Error(),
-	}, err
+		Hostname: req.Url,
+	}, nil
 }

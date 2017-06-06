@@ -8,9 +8,14 @@ import (
 
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/data"
+	"github.com/unerror/waffy/pkg/services/protos/nodes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+type baseHandler struct {
+	s data.Consensus
+}
 
 // Serve blocks and services the RPC
 func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error {
@@ -36,7 +41,12 @@ func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error 
 	}
 
 	handler := baseHandler{
+		s: s,
+	}
+
 	server := grpc.NewServer(grpc.Creds(creds))
+
+	nodes.RegisterJoinServiceServer(server, &Node{handler})
 
 	return server.Serve(lis)
 }
