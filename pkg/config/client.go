@@ -1,13 +1,14 @@
 package config
 
 import (
-	"crypto/x509"
 	"crypto/rsa"
+	"crypto/x509"
 
-	"github.com/therounds/hermes/protos/users"
-	"os"
 	"encoding/json"
 	"fmt"
+	"os"
+
+	"github.com/therounds/hermes/protos/users"
 )
 
 const (
@@ -88,7 +89,7 @@ func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) 
 		return err
 	}
 
-	keyPath:= fmt.Sprintf("%s.key", email)
+	keyPath := fmt.Sprintf("%s.key", email)
 	keyFile, err := ensureFile(path, keyPath)
 	if err != nil {
 		return fmt.Errorf("unable to save client certificate: %s", err)
@@ -96,4 +97,3 @@ func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) 
 
 	return saveKey(keyFile, k)
 }
-
