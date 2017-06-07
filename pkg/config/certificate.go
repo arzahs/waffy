@@ -104,7 +104,7 @@ func LoadKey(name string) (crypto.PrivateKey, error) {
 	return loadKey(f)
 }
 
-func saveKey(f *os.File, key crypto.PrivateKey) error {
+func saveKey(f io.Writer, key crypto.PrivateKey) error {
 	w := bufio.NewWriter(f)
 	switch privKey := key.(type) {
 	case *rsa.PrivateKey:
@@ -120,7 +120,7 @@ func saveKey(f *os.File, key crypto.PrivateKey) error {
 	return w.Flush()
 }
 
-func saveCert(f *os.File, certificate *x509.Certificate) error {
+func saveCert(f io.Writer, certificate *x509.Certificate) error {
 	w := bufio.NewWriter(f)
 	block := pem.Block{
 		Type:  "CERTIFICATE",
