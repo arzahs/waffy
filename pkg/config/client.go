@@ -18,12 +18,13 @@ const (
 
 // ClientConfig is the configuration for the client to access RPC
 type ClientConfig struct {
-	server string      `json:"server"`
-	user   *users.User `json:"user,flow"`
-	pubkey *x509.Certificate `json:"-"`
-	privkey *rsa.PrivateKey `json:"-"`
+	Server  string            `json:"server"`
+	User    *users.User       `json:"user"`
+	Pubkey  *x509.Certificate `json:"-"`
+	Privkey *rsa.PrivateKey   `json:"-"`
 }
 
+// CreateClientConfig creates an RPC client configuration stored on disk
 func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificate, privkey *rsa.PrivateKey) (*ClientConfig, error) {
 	path := os.ExpandEnv(ClientConfigDir)
 	if err := os.MkdirAll(path, 0700); err != nil {
@@ -38,10 +39,10 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 	}
 
 	c := &ClientConfig{
-		server: server,
-		user: user,
-		pubkey: pubkey,
-		privkey: privkey,
+		Server:  server,
+		User:    user,
+		Pubkey:  pubkey,
+		Privkey: privkey,
 	}
 
 	clientCfg, err := ensureFile(config, "waffy.json")
