@@ -53,7 +53,7 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 		return nil, fmt.Errorf("unable to save client configuration: %s", err)
 	}
 
-	err = saveClientCert(config, user.Email, pubkey, privkey)
+	err = SaveClientCert(config, user.Email, pubkey, privkey)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +77,8 @@ func LoadClientConfig(path, email string) (*ClientConfig, error) {
 	return &c, nil
 }
 
-// saveClientCert saves a client Certificate to the filesystem
-func saveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) error {
+// SaveClientCert saves a client Certificate to the filesystem
+func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) error {
 	certPath := fmt.Sprintf("%s.crt", email)
 	certFile, err := ensureFile(path, certPath)
 	if err != nil {

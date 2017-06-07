@@ -66,13 +66,13 @@ func WithConsensus(f func(ctx *cli.Context, c data.Consensus) error) func(*cli.C
 	})
 }
 
-func withConsensusConfig(f func(ctx *cli.Context, s data.Consensus, c *config.Config) error) func(*cli.Context) error {
+func WithConsensusConfig(f func(ctx *cli.Context, s data.Consensus, c *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		var c *config.Config
 		var s data.Consensus
 
 		// TODO: better way to do this config too
-		err := withConfig(func(ctx *cli.Context, cfg *config.Config) error {
+		err := WithConfig(func(ctx *cli.Context, cfg *config.Config) error {
 			c = cfg
 			return nil
 		})(ctx)
@@ -80,7 +80,7 @@ func withConsensusConfig(f func(ctx *cli.Context, s data.Consensus, c *config.Co
 			return err
 		}
 
-		err = withConsensus(func(ctx *cli.Context, c data.Consensus) error {
+		err = WithConsensus(func(ctx *cli.Context, c data.Consensus) error {
 			s = c
 			return nil
 		})(ctx)

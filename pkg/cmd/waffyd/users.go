@@ -41,13 +41,13 @@ func init() {
 						Usage: "The user's role",
 					},
 				),
-				Action: cmd.WithConsensus(createUser),
+				Action: cmd.WithConsensusConfig(createUser),
 			},
 		},
 	})
 }
 
-func createUser(ctx *cli.Context, db data.Consensus) error {
+func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 	// check required fields
 	fullName := ctx.String("full-name")
 	email := ctx.String("email")
@@ -75,7 +75,7 @@ func createUser(ctx *cli.Context, db data.Consensus) error {
 			return err
 		}
 
-		err = config.SaveClientCert(u.Email, cert, key)
+		err = config.SaveClientCert(cfg.CertPath, u.Email, cert, key)
 		if err != nil {
 			return err
 		}
