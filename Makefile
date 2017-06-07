@@ -24,13 +24,11 @@ vendor: glide.lock glide.yaml
 bin:
 	mkdir -p bin
 
-bin/waffyd: bootstrap vendor bin
-	go build ./cmd/waffyd/
-	mv waffyd bin/
+bin/waffyd: vendor bin
+	CGO_ENABLED=0 go build -race -i -v -o bin/waffyd ./cmd/waffyd/
 
-bin/waffy: bootstrap vendor bin
-	go build ./cmd/waffy/
-	mv waffy bin/
+bin/waffy: vendor bin
+	CGO_ENABLED=0 go build -race -i -v -o bin/waffy ./cmd/waffy/
 
 services:
 	mkdir -p services
@@ -61,7 +59,7 @@ lint-next: install
 # Tests
 
 test:
-	go test ./pkg/... -v
+	go test -race ./pkg/... -v
 
 test-web:
 	goconvey -excludedDirs=protos,vendor
