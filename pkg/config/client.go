@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/therounds/hermes/protos/users"
+	"github.com/unerror/waffy/pkg/services/protos/users"
 )
 
 const (
