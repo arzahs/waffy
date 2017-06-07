@@ -15,11 +15,21 @@ import (
 
 // SaveCA saves the certificate to the filesystem
 func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
-	err := saveCert("ca.crt", certificate)
+	caFile, err := ensureConfigCertFile("ca.cert")
+	if err != nil {
+		return fmt.Errorf("cannot create cert: %s", err)
+	}
+
+	err = saveCert(caFile, certificate)
 	if err != nil {
 		return fmt.Errorf("unable to save ca certificate: %s", err)
 	}
-	err = saveKey("ca.key", key)
+
+	keyFile, err := ensureConfigCertFile("ca.key")
+	if err != nil {
+		return fmt.Errorf("cannot create key: %s", err)
+	}
+	err = saveKey(keyFile, key)
 	if err != nil {
 		return fmt.Errorf("unable to save ca key: %s", err)
 	}
@@ -29,7 +39,7 @@ func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
 
 // LoadCA loads the public and private key data about the CA
 func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
-	cf, err := loadFile("ca.crt")
+	cf, err := loadConfigCertFile("ca.crt")
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not load ca certificate")
 	}
@@ -39,7 +49,7 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 		return nil, nil, fmt.Errorf("unable to load CA certificate: %s", err)
 	}
 
-	kf, err := loadFile("ca.key")
+	kf, err := loadConfigCertFile("ca.key")
 	if err != nil {
 		return cert, nil, fmt.Errorf("could not load ca key: %s", err)
 	}
@@ -52,28 +62,21 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 	return cert, key, nil
 }
 
-// SaveClientCert saves a client Certificate to the filesystem
-func SaveClientCert(email string, c *x509.Certificate, k *rsa.PrivateKey) error {
-	certFile := filepath.Join("users", email, "user.crt")
-	err := saveCert(certFile, c)
-	if err != nil {
-		return err
-	}
-
-	keyFile := filepath.Join("users", email, "user.key")
-	return saveKey(keyFile, k)
-}
-
 // SaveCert saves the certificate data to the file system
 func SaveCert(name string, certificate *x509.Certificate) error {
 	certFile := filepath.Join("nodes", name, "node.crt")
-	return saveCert(certFile, certificate)
+	f, err := ensureConfigCertFile(certFile)
+	if err != nil {
+		return fmt.Errorf("unable to create node certificate file: %s", err)
+	}
+
+	return saveCert(f, certificate)
 }
 
 // LoadCert returns the Certificate from the filesystem
 func LoadCert(name string) (*x509.Certificate, error) {
 	path := filepath.Join("nodes", name, "node.crt")
-	f, err := loadFile(path)
+	f, err := loadConfigCertFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load key: %s", err)
 	}
@@ -83,13 +86,17 @@ func LoadCert(name string) (*x509.Certificate, error) {
 // SaveKey saves a given private key to the filesystem
 func SaveKey(name string, key crypto.PrivateKey) error {
 	keyFile := filepath.Join("nodes", name, "node.key")
-	return saveKey(keyFile, key)
+	f, err := ensureConfigCertFile(keyFile)
+	if err != nil {
+		return fmt.Errorf("unable to create node key file: %s", err)
+	}
+	return saveKey(f, key)
 }
 
 // LoadKey loads the given private key from the filesystem
 func LoadKey(name string) (crypto.PrivateKey, error) {
 	path := filepath.Join("nodes", name, "node.key")
-	f, err := loadFile(path)
+	f, err := loadConfigCertFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load private key: %s", err)
 	}
@@ -97,12 +104,7 @@ func LoadKey(name string) (crypto.PrivateKey, error) {
 	return loadKey(f)
 }
 
-func saveKey(filename string, key crypto.PrivateKey) error {
-	f, err := ensureFile(filename)
-	if err != nil {
-		return fmt.Errorf("cannot save key: %s", err)
-	}
-
+func saveKey(f *os.File, key crypto.PrivateKey) error {
 	w := bufio.NewWriter(f)
 	switch privKey := key.(type) {
 	case *rsa.PrivateKey:
@@ -118,12 +120,7 @@ func saveKey(filename string, key crypto.PrivateKey) error {
 	return w.Flush()
 }
 
-func saveCert(filename string, certificate *x509.Certificate) error {
-	f, err := ensureFile(filename)
-	if err != nil {
-		return fmt.Errorf("cannot save cert: %s", err)
-	}
-
+func saveCert(f *os.File, certificate *x509.Certificate) error {
 	w := bufio.NewWriter(f)
 	block := pem.Block{
 		Type:  "CERTIFICATE",
@@ -167,7 +164,7 @@ func decodePEMBlock(f io.Reader) (*pem.Block, error) {
 	return block, err
 }
 
-func ensureFile(filename string) (*os.File, error) {
+func ensureConfigCertFile(filename string) (*os.File, error) {
 	cfg, err := Load()
 	if err != nil {
 		return nil, fmt.Errorf("unable to load config: %s", err)
@@ -181,36 +178,20 @@ func ensureFile(filename string) (*os.File, error) {
 		}
 	}
 
-	var path string
 	certPath, err := filepath.Abs(cfg.CertPath)
 	if err != nil {
 		return nil, err
 	}
 
-	dir, fName := filepath.Split(filename)
-	if fName != "" {
-		dir := filepath.Join(cfg.CertPath, dir)
-		if err := os.MkdirAll(dir, 0700); err != nil {
-			if !os.IsExist(err) || !os.IsNotExist(err) {
-				return nil, err
-			}
-		}
-
-		path = filepath.Join(dir, fName)
-	}
-	if fName == "" {
-		path = filepath.Join(certPath, filename)
-
-	}
-	f, err := os.Create(path)
+	f, err := ensureFile(certPath, filename)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create CertPath: %s", err)
+		return nil, err
 	}
 
 	return f, nil
 }
 
-func loadFile(filename string) (*os.File, error) {
+func loadConfigCertFile(filename string) (*os.File, error) {
 	certPath, err := filepath.Abs(cfg.CertPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load certificate path: %s", err)

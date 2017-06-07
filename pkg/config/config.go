@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -95,4 +96,31 @@ func Load() (*Config, error) {
 	}
 
 	return nil, fmt.Errorf("Error reading configuration")
+}
+
+// ensureFile ensures that a file at a given directory exists
+func ensureFile(base, filename string) (*os.File, error) {
+	var path string
+
+	dir, fName := filepath.Split(filename)
+	if fName != "" {
+		dir := filepath.Join(base, dir)
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			if !os.IsExist(err) || !os.IsNotExist(err) {
+				return nil, err
+			}
+		}
+
+		path = filepath.Join(dir, fName)
+	}
+	if fName == "" {
+		path = filepath.Join(base, filename)
+
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create CertPath: %s", err)
+	}
+
+	return f, nil
 }
