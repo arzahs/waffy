@@ -207,15 +207,12 @@ func ensureConfigCertFile(filename string) (*os.File, error) {
 func loadConfigCertFile(filename string) (*os.File, error) {
 	certPath, err := filepath.Abs(cfg.CertPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load certificate path: %s", err)
+		return nil, err
+	}
+	f, err := ensureFile(certPath, filename)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load file %s", filename)
 	}
 
-	path := filepath.Join(certPath, filename)
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("the CertPath does not exist")
-		}
-	}
-
-	return os.Open(path)
+	return f, nil
 }
