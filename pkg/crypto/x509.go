@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
@@ -10,11 +11,17 @@ import (
 	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"math/big"
 	"time"
 )
 
-const caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
+const (
+	PEMRSAType         = "RSA PRIVATE KEY"
+	PEMCertificateType = "CERTIFICATE"
+
+	caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
+)
 
 // NewPrivateKey generates a new RSA PublicKey
 func NewPrivateKey(bits int) (crypto.PrivateKey, error) {
@@ -35,17 +42,66 @@ func EncodePEM(keydata interface{}) []byte {
 	switch data := keydata.(type) {
 	case *rsa.PrivateKey:
 		block = pem.Block{
-			Type:  "RSA PRIVATE KEY",
+			Type:  PEMRSAType,
 			Bytes: x509.MarshalPKCS1PrivateKey(data),
 		}
 	case *x509.Certificate:
 		block = pem.Block{
-			Type:  "CERTIFICATE",
+			Type:  PEMCertificateType,
 			Bytes: data.Raw,
 		}
 	}
 
 	return pem.EncodeToMemory(&block)
+}
+
+// EncodePEMWriter encodes a PEM Block to a file, given the keydata given
+func EncodePEMWriter(keydata interface{}, f io.Writer) error {
+	pBytes := EncodePEM(keydata)
+	_, err := f.Write(pBytes)
+	if err != nil {
+		return fmt.Errorf("unable to write PEM data: %s", err)
+	}
+
+	return nil
+}
+
+// Decode PEM decodes a PEM Block from a file and interprets it as either an *x509.Certificate
+// or an *rsa.PrivateKey
+func DecodePEMReader(f io.ReadCloser) (dec interface{}, err error) {
+	defer func() {
+		err = f.Close()
+	}()
+
+	buf := bytes.NewBuffer([]byte{})
+	_, err = buf.ReadFrom(f)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read PEM block: %s", err)
+	}
+
+	if buf.Len() == 0 {
+		return nil, fmt.Errorf("cannot decode empty file")
+	}
+
+	return DecodePEM(buf.Bytes())
+}
+
+// DecodePEM decodes a PEM block from the given bytes and interprets it as either an
+// *x509.Certificate or an *rsa.PrivateKey
+func DecodePEM(asn1Data []byte) (interface{}, error) {
+	block, rest := pem.Decode(asn1Data)
+	if len(rest) > 0 {
+		return nil, fmt.Errorf("additional certificate data decoded in PEM block")
+	}
+
+	switch block.Type {
+	case PEMRSAType:
+		return x509.ParsePKCS1PrivateKey(block.Bytes)
+	case PEMCertificateType:
+		return x509.ParseCertificate(block.Bytes)
+	}
+
+	return nil, fmt.Errorf("unrecognized PEM type")
 }
 
 // x590CertificateAuthority generates generates a new *x590.Certificate

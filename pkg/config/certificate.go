@@ -2,15 +2,15 @@ package config
 
 import (
 	"bufio"
-	"bytes"
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	wcrypto "github.com/unerror/waffy/pkg/crypto"
 )
 
 // SaveCA saves the certificate to the filesystem
@@ -110,17 +110,11 @@ func saveKey(f io.WriteCloser, key crypto.PrivateKey) (err error) {
 	}()
 
 	w := bufio.NewWriter(f)
-	switch privKey := key.(type) {
-	case *rsa.PrivateKey:
 
-		block := pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(privKey),
-		}
-		if err := pem.Encode(w, &block); err != nil {
-			return fmt.Errorf("unable to format ")
-		}
+	if err := wcrypto.EncodePEMWriter(key, w); err != nil {
+		return fmt.Errorf("unable to save privkey: %s", err)
 	}
+
 	return w.Flush()
 }
 
@@ -130,59 +124,30 @@ func saveCert(f io.WriteCloser, certificate *x509.Certificate) (err error) {
 	}()
 
 	w := bufio.NewWriter(f)
-	block := pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: certificate.Raw,
+
+	if err := wcrypto.EncodePEMWriter(certificate, w); err != nil {
+		return fmt.Errorf("unable to save pubkey: %s", err)
 	}
-	if err := pem.Encode(w, &block); err != nil {
-		return err
-	}
+
 	return w.Flush()
 }
 
 func loadCert(f io.ReadCloser) (c *x509.Certificate, err error) {
-	defer func() {
-		err = f.Close()
-	}()
-
-	block, err := decodePEMBlock(f)
+	i, err := wcrypto.DecodePEMReader(f)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode certificate PEM block: %s", err)
+		return nil, err
 	}
 
-	return x509.ParseCertificate(block.Bytes)
+	return i.(*x509.Certificate), nil
 }
 
 func loadKey(f io.ReadCloser) (k crypto.PrivateKey, err error) {
-	defer func() {
-		err = f.Close()
-	}()
-
-	block, err := decodePEMBlock(f)
+	i, err := wcrypto.DecodePEMReader(f)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode key PEM block: %s", err)
+		return nil, err
 	}
 
-	return x509.ParsePKCS1PrivateKey(block.Bytes)
-}
-
-func decodePEMBlock(f io.Reader) (*pem.Block, error) {
-	buf := bytes.NewBuffer([]byte{})
-	_, err := buf.ReadFrom(f)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read certificate file: %s", err)
-	}
-
-	if buf.Len() == 0 {
-		return nil, fmt.Errorf("cannot decode empty file")
-	}
-
-	block, rest := pem.Decode(buf.Bytes())
-	if len(rest) > 0 {
-		return nil, fmt.Errorf("additional certificate data decoded in PEM block")
-	}
-
-	return block, err
+	return i.(*rsa.PrivateKey), nil
 }
 
 func ensureConfigCertFile(filename string, truncate bool) (*os.File, error) {
