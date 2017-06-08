@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 
 	"gopkg.in/urfave/cli.v1"
@@ -85,13 +84,7 @@ func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 		}
 
 		if ctx.Bool("save") {
-
 			_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = config.SaveClientCert(os.ExpandEnv(config.ClientConfigDir), u.Email, cert, key)
 			if err != nil {
 				return err
 			}
