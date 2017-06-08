@@ -2,13 +2,13 @@ package config
 
 import (
 	"bufio"
+	"bytes"
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -151,12 +151,17 @@ func loadKey(f io.Reader) (crypto.PrivateKey, error) {
 }
 
 func decodePEMBlock(f io.Reader) (*pem.Block, error) {
-	certBytes, err := ioutil.ReadAll(f)
+	buf := bytes.NewBuffer([]byte{})
+	_, err := buf.ReadFrom(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read certificate file: %s", err)
 	}
 
-	block, rest := pem.Decode(certBytes)
+	if buf.Len() == 0 {
+		return nil, fmt.Errorf("cannot decode empty file")
+	}
+
+	block, rest := pem.Decode(buf.Bytes())
 	if len(rest) > 0 {
 		return nil, fmt.Errorf("additional certificate data decoded in PEM block")
 	}
