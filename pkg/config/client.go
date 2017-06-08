@@ -3,11 +3,11 @@ package config
 import (
 	"crypto/rsa"
 	"crypto/x509"
-
 	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/services/protos/users"
 )
 
@@ -18,10 +18,12 @@ const (
 
 // ClientConfig is the configuration for the client to access RPC
 type ClientConfig struct {
-	Server  string            `json:"server"`
-	User    *users.User       `json:"user"`
-	Pubkey  *x509.Certificate `json:"-"`
-	Privkey *rsa.PrivateKey   `json:"-"`
+	Server     string            `json:"server"`
+	User       *users.User       `json:"user"`
+	PublicKey  []byte            `json:"pubkey"`
+	PrivateKey []byte            `json:"privkey"`
+	pubkey     *x509.Certificate `json:"-"`
+	privkey    *rsa.PrivateKey   `json:"-"`
 }
 
 // CreateClientConfig creates an RPC client configuration stored on disk
@@ -41,10 +43,10 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 	}
 
 	c := &ClientConfig{
-		Server:  server,
-		User:    user,
-		Pubkey:  pubkey,
-		Privkey: privkey,
+		Server:     server,
+		User:       user,
+		PublicKey:  crypto.EncodePEM(pubkey),
+		PrivateKey: crypto.EncodePEM(privkey),
 	}
 
 	clientCfg, err := ensureFile(config, "waffy.json", true)
@@ -55,11 +57,6 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 	enc := json.NewEncoder(clientCfg)
 	if err := enc.Encode(c); err != nil {
 		return nil, fmt.Errorf("unable to save client configuration: %s", err)
-	}
-
-	err = SaveClientCert(config, user.Email, pubkey, privkey)
-	if err != nil {
-		return nil, err
 	}
 
 	return c, nil
@@ -78,25 +75,17 @@ func LoadClientConfig(path, email string) (*ClientConfig, error) {
 		return nil, fmt.Errorf("unable to decode client configuration: %s", err)
 	}
 
+	pubkey, err := crypto.DecodePEM(c.PublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode public key")
+	}
+	c.pubkey = pubkey.(*x509.Certificate)
+
+	privkey, err := crypto.DecodePEM(c.PrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode privkey")
+	}
+	c.privkey = privkey.(*rsa.PrivateKey)
+
 	return &c, nil
-}
-
-// SaveClientCert saves a client Certificate to the filesystem
-func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) error {
-	certPath := fmt.Sprintf("%s.crt", email)
-	certFile, err := ensureFile(path, certPath, true)
-	if err != nil {
-		return fmt.Errorf("unable to save client certificate: %s", err)
-	}
-	if err := saveCert(certFile, c); err != nil {
-		return err
-	}
-
-	keyPath := fmt.Sprintf("%s.key", email)
-	keyFile, err := ensureFile(path, keyPath, true)
-	if err != nil {
-		return fmt.Errorf("unable to save client certificate: %s", err)
-	}
-
-	return saveKey(keyFile, k)
 }
