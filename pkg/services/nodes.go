@@ -18,7 +18,7 @@ type Node struct {
 
 // Join joins a new Node to the RPC and Raft consensus
 func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinResponse, error) {
-	if _, err := repository.FindNodeByHostname(n.s, req.Url); err != nil {
+	if _, err := repository.FindNodeByHostname(n.s, req.Hostname); err != nil {
 		return nil, errors.New("hostname already exists")
 	}
 
@@ -30,26 +30,26 @@ func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinRes
 		return nil, errors.New("unable to create new node")
 	}
 
-	err := n.s.Join(req.Url)
+	err := n.s.Join(req.Hostname)
 	if err != nil {
 		return nil, fmt.Errorf("unable to join raft node: %s", err)
 	}
 
 	return &nodes.JoinResponse{
-		Hostname: req.Url,
+		Hostname: req.Hostname,
 	}, nil
 }
 
 // Leave leaves a Node from the RPC and Raft consensus
 func (n *Node) Leave(ctx context.Context, req *nodes.LeaveRequest) (*nodes.LeaveResponse, error) {
-	if err := repository.DeleteNodeByHostname(n.s, req.Url); err != nil {
+	if err := repository.DeleteNodeByHostname(n.s, req.Hostname); err != nil {
 		return nil, errors.New("error deleting node in store")
 	}
-	if err := n.s.Leave(req.Url); err != nil {
+	if err := n.s.Leave(req.Hostname); err != nil {
 		return nil, fmt.Errorf("unable to leave raft: %s", err)
 	}
 
 	return &nodes.LeaveResponse{
-		Hostname: req.Url,
+		Hostname: req.Hostname,
 	}, nil
 }
