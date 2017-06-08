@@ -99,7 +99,7 @@ func Load() (*Config, error) {
 }
 
 // ensureFile ensures that a file at a given directory exists
-func ensureFile(base, filename string) (*os.File, error) {
+func ensureFile(base, filename string, truncate bool) (*os.File, error) {
 	var path string
 
 	dir, fName := filepath.Split(filename)
@@ -118,7 +118,12 @@ func ensureFile(base, filename string) (*os.File, error) {
 
 	}
 
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0600)
+	fileFlags := os.O_RDWR | os.O_CREATE
+	if truncate {
+		fileFlags = fileFlags | os.O_TRUNC
+	}
+
+	f, err := os.OpenFile(path, fileFlags, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open path %s: %s", path, err)
 	}

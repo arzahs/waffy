@@ -47,7 +47,7 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 		Privkey: privkey,
 	}
 
-	clientCfg, err := ensureFile(config, "waffy.json")
+	clientCfg, err := ensureFile(config, "waffy.json", true)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 
 // LoadClientConfig loads a client configuration from the filesystem
 func LoadClientConfig(path, email string) (*ClientConfig, error) {
-	f, err := ensureFile(path, "waffy.json")
+	f, err := ensureFile(path, "waffy.json", false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load client configuration: %s", err)
 	}
@@ -84,7 +84,7 @@ func LoadClientConfig(path, email string) (*ClientConfig, error) {
 // SaveClientCert saves a client Certificate to the filesystem
 func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) error {
 	certPath := fmt.Sprintf("%s.crt", email)
-	certFile, err := ensureFile(path, certPath)
+	certFile, err := ensureFile(path, certPath, true)
 	if err != nil {
 		return fmt.Errorf("unable to save client certificate: %s", err)
 	}
@@ -93,7 +93,7 @@ func SaveClientCert(path, email string, c *x509.Certificate, k *rsa.PrivateKey) 
 	}
 
 	keyPath := fmt.Sprintf("%s.key", email)
-	keyFile, err := ensureFile(path, keyPath)
+	keyFile, err := ensureFile(path, keyPath, true)
 	if err != nil {
 		return fmt.Errorf("unable to save client certificate: %s", err)
 	}

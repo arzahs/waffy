@@ -15,7 +15,7 @@ import (
 
 // SaveCA saves the certificate to the filesystem
 func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
-	caFile, err := ensureConfigCertFile("ca.crt")
+	caFile, err := ensureConfigCertFile("ca.crt", true)
 	if err != nil {
 		return fmt.Errorf("cannot create cert: %s", err)
 	}
@@ -25,7 +25,7 @@ func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
 		return fmt.Errorf("unable to save ca certificate: %s", err)
 	}
 
-	keyFile, err := ensureConfigCertFile("ca.key")
+	keyFile, err := ensureConfigCertFile("ca.key", true)
 	if err != nil {
 		return fmt.Errorf("cannot create key: %s", err)
 	}
@@ -65,7 +65,7 @@ func LoadCA() (*x509.Certificate, crypto.PrivateKey, error) {
 // SaveCert saves the certificate data to the file system
 func SaveCert(name string, certificate *x509.Certificate) error {
 	certFile := filepath.Join("nodes", name, "node.crt")
-	f, err := ensureConfigCertFile(certFile)
+	f, err := ensureConfigCertFile(certFile, true)
 	if err != nil {
 		return fmt.Errorf("unable to create node certificate file: %s", err)
 	}
@@ -86,7 +86,7 @@ func LoadCert(name string) (*x509.Certificate, error) {
 // SaveKey saves a given private key to the filesystem
 func SaveKey(name string, key crypto.PrivateKey) error {
 	keyFile := filepath.Join("nodes", name, "node.key")
-	f, err := ensureConfigCertFile(keyFile)
+	f, err := ensureConfigCertFile(keyFile, true)
 	if err != nil {
 		return fmt.Errorf("unable to create node key file: %s", err)
 	}
@@ -185,7 +185,7 @@ func decodePEMBlock(f io.Reader) (*pem.Block, error) {
 	return block, err
 }
 
-func ensureConfigCertFile(filename string) (*os.File, error) {
+func ensureConfigCertFile(filename string, truncate bool) (*os.File, error) {
 	cfg, err := Load()
 	if err != nil {
 		return nil, fmt.Errorf("unable to load config: %s", err)
@@ -204,7 +204,7 @@ func ensureConfigCertFile(filename string) (*os.File, error) {
 		return nil, err
 	}
 
-	f, err := ensureFile(certPath, filename)
+	f, err := ensureFile(certPath, filename, truncate)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func loadConfigCertFile(filename string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	f, err := ensureFile(certPath, filename)
+	f, err := ensureFile(certPath, filename, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load file %s", filename)
 	}
