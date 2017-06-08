@@ -24,11 +24,11 @@ vendor: glide.lock glide.yaml
 bin:
 	mkdir -p bin
 
-bin/waffyd: vendor bin
-	CGO_ENABLED=0 go build -race -i -v -o bin/waffyd ./cmd/waffyd/
+bin/waffyd: bootstrap vendor bin
+	go build -race -i -v -o bin/waffyd ./cmd/waffyd/
 
-bin/waffy: vendor bin
-	CGO_ENABLED=0 go build -race -i -v -o bin/waffy ./cmd/waffy/
+bin/waffy: bootstrap vendor bin
+	go build -race -i -v -o bin/waffy ./cmd/waffy/
 
 services:
 	mkdir -p services
