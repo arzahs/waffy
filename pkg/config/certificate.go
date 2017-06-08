@@ -104,7 +104,9 @@ func LoadKey(name string) (crypto.PrivateKey, error) {
 	return loadKey(f)
 }
 
-func saveKey(f io.Writer, key crypto.PrivateKey) error {
+func saveKey(f io.WriteCloser, key crypto.PrivateKey) error {
+	defer f.Close()
+
 	w := bufio.NewWriter(f)
 	switch privKey := key.(type) {
 	case *rsa.PrivateKey:
@@ -120,7 +122,9 @@ func saveKey(f io.Writer, key crypto.PrivateKey) error {
 	return w.Flush()
 }
 
-func saveCert(f io.Writer, certificate *x509.Certificate) error {
+func saveCert(f io.WriteCloser, certificate *x509.Certificate) error {
+	defer f.Close()
+
 	w := bufio.NewWriter(f)
 	block := pem.Block{
 		Type:  "CERTIFICATE",
@@ -132,7 +136,9 @@ func saveCert(f io.Writer, certificate *x509.Certificate) error {
 	return w.Flush()
 }
 
-func loadCert(f io.Reader) (*x509.Certificate, error) {
+func loadCert(f io.ReadCloser) (*x509.Certificate, error) {
+	defer f.Close()
+
 	block, err := decodePEMBlock(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode certificate PEM block: %s", err)
@@ -141,7 +147,9 @@ func loadCert(f io.Reader) (*x509.Certificate, error) {
 	return x509.ParseCertificate(block.Bytes)
 }
 
-func loadKey(f io.Reader) (crypto.PrivateKey, error) {
+func loadKey(f io.ReadCloser) (crypto.PrivateKey, error) {
+	defer f.Close()
+
 	block, err := decodePEMBlock(f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode key PEM block: %s", err)
