@@ -40,10 +40,6 @@ func init() {
 						Name:  "role",
 						Usage: "The user's role",
 					},
-					cli.BoolFlag{
-						Name:  "save",
-						Usage: "Saves the client configuration for use on this machine",
-					},
 				),
 				Action: cmd.WithConsensusConfig(createUser),
 			},
@@ -83,11 +79,9 @@ func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 			return fmt.Errorf("cannot save user to store: %s", err)
 		}
 
-		if ctx.Bool("save") {
-			_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
-			if err != nil {
-				return err
-			}
+		_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
+		if err != nil {
+			return err
 		}
 
 		return nil
