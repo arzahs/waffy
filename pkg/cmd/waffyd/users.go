@@ -5,17 +5,18 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	"gopkg.in/urfave/cli.v1"
 
+	"github.com/unerror/waffy/pkg/cmd"
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/data"
 	"github.com/unerror/waffy/pkg/repository"
 	"github.com/unerror/waffy/pkg/services/protos/certificates"
 	"github.com/unerror/waffy/pkg/services/protos/users"
-	"github.com/unerror/waffy/pkg/cmd"
 )
 
 func init() {
@@ -39,6 +40,10 @@ func init() {
 					cli.StringFlag{
 						Name:  "role",
 						Usage: "The user's role",
+					},
+					cli.BoolFlag{
+						Name:  "save",
+						Usage: "Saves the client configuration for use on this machine",
 					},
 				),
 				Action: cmd.WithConsensusConfig(createUser),
@@ -75,11 +80,28 @@ func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 			return err
 		}
 
-		err = config.SaveClientCert(cfg.CertPath, u.Email, cert, key)
-		if err != nil {
-			return err
+		var cfgPath = cfg.CertPath
+		if ctx.Bool("save") {
+			cfgPath = os.ExpandEnv(config.ClientConfigDir)
 		}
-		return repository.CreateUser(db, u)
+
+		if err := repository.SetUser(db, u); err != nil {
+			return fmt.Errorf("cannot save user to store: %s", err)
+		}
+
+		if ctx.Bool("save") {
+			_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = config.SaveClientCert(cfgPath, u.Email, cert, key)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	log.Fatalf("Unable to create user %s since they already exist. --overwrite to force\n", email)
