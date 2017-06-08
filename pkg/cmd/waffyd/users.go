@@ -80,22 +80,18 @@ func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 			return err
 		}
 
-		var cfgPath = cfg.CertPath
-		if ctx.Bool("save") {
-			cfgPath = os.ExpandEnv(config.ClientConfigDir)
-		}
-
 		if err := repository.SetUser(db, u); err != nil {
 			return fmt.Errorf("cannot save user to store: %s", err)
 		}
 
 		if ctx.Bool("save") {
+
 			_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = config.SaveClientCert(cfgPath, u.Email, cert, key)
+			err = config.SaveClientCert(os.ExpandEnv(config.ClientConfigDir), u.Email, cert, key)
 			if err != nil {
 				return err
 			}
