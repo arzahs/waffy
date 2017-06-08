@@ -117,9 +117,10 @@ func ensureFile(base, filename string) (*os.File, error) {
 		path = filepath.Join(base, filename)
 
 	}
-	f, err := os.Create(path)
+
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create CertPath: %s", err)
+		return nil, fmt.Errorf("unable to open path %s: %s", path, err)
 	}
 
 	return f, nil
