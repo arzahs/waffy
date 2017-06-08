@@ -13,6 +13,11 @@ func Create(b data.Bucket, k []byte, m proto.Marshaler) error {
 		return fmt.Errorf("%s already exists", k)
 	}
 
+	return Set(b, k, m)
+}
+
+// Set will set a key to a generic Marshable message m
+func Set(b data.Bucket, k []byte, m proto.Marshaler) error {
 	mBytes, err := m.Marshal()
 	if err != nil {
 		return err
