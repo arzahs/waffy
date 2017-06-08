@@ -20,6 +20,16 @@ func CreateUser(d data.Store, u *users.User) error {
 	return Create(b, []byte(u.Email), u)
 }
 
+// SetUser sets a user u in the data store d
+func SetUser(d data.Store, u *users.User) error {
+	b, err := d.Bucket(UsersBucket)
+	if err != nil {
+		return err
+	}
+
+	return Set(b, []byte(u.Email), u)
+}
+
 // FindUserByEmail returns the User stored with the given email
 func FindUserByEmail(d data.Store, email string) (*users.User, error) {
 	b, err := d.Bucket(UsersBucket)
