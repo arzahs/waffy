@@ -15,7 +15,7 @@ import (
 
 // SaveCA saves the certificate to the filesystem
 func SaveCA(certificate *x509.Certificate, key crypto.PrivateKey) error {
-	caFile, err := ensureConfigCertFile("ca.cert")
+	caFile, err := ensureConfigCertFile("ca.crt")
 	if err != nil {
 		return fmt.Errorf("cannot create cert: %s", err)
 	}
