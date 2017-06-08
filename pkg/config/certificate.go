@@ -104,8 +104,10 @@ func LoadKey(name string) (crypto.PrivateKey, error) {
 	return loadKey(f)
 }
 
-func saveKey(f io.WriteCloser, key crypto.PrivateKey) error {
-	defer f.Close()
+func saveKey(f io.WriteCloser, key crypto.PrivateKey) (err error) {
+	defer func() {
+		err = f.Close()
+	}()
 
 	w := bufio.NewWriter(f)
 	switch privKey := key.(type) {
@@ -122,8 +124,10 @@ func saveKey(f io.WriteCloser, key crypto.PrivateKey) error {
 	return w.Flush()
 }
 
-func saveCert(f io.WriteCloser, certificate *x509.Certificate) error {
-	defer f.Close()
+func saveCert(f io.WriteCloser, certificate *x509.Certificate) (err error) {
+	defer func() {
+		err = f.Close()
+	}()
 
 	w := bufio.NewWriter(f)
 	block := pem.Block{
@@ -136,8 +140,10 @@ func saveCert(f io.WriteCloser, certificate *x509.Certificate) error {
 	return w.Flush()
 }
 
-func loadCert(f io.ReadCloser) (*x509.Certificate, error) {
-	defer f.Close()
+func loadCert(f io.ReadCloser) (c *x509.Certificate, err error) {
+	defer func() {
+		err = f.Close()
+	}()
 
 	block, err := decodePEMBlock(f)
 	if err != nil {
@@ -147,8 +153,10 @@ func loadCert(f io.ReadCloser) (*x509.Certificate, error) {
 	return x509.ParseCertificate(block.Bytes)
 }
 
-func loadKey(f io.ReadCloser) (crypto.PrivateKey, error) {
-	defer f.Close()
+func loadKey(f io.ReadCloser) (k crypto.PrivateKey, err error) {
+	defer func() {
+		err = f.Close()
+	}()
 
 	block, err := decodePEMBlock(f)
 	if err != nil {
