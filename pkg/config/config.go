@@ -118,7 +118,7 @@ func ensureFile(base, filename string) (*os.File, error) {
 
 	}
 
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0700)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open path %s: %s", path, err)
 	}
