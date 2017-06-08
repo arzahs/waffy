@@ -17,7 +17,7 @@ func Create(b data.Bucket, k []byte, m proto.Marshaler) error {
 }
 
 // Set will set a key to a generic Marshable message m
-func Set(b data.Bucket, k []byte, m proto.Marshaler) error {
+func Set(b data.ValueSetter, k []byte, m proto.Marshaler) error {
 	mBytes, err := m.Marshal()
 	if err != nil {
 		return err
