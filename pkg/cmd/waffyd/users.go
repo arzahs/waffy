@@ -80,11 +80,7 @@ func createUser(ctx *cli.Context, db data.Consensus, cfg *config.Config) error {
 		}
 
 		_, err = config.CreateClientConfig(cfg.APIListen, u, cert, key)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	log.Fatalf("Unable to create user %s since they already exist. --overwrite to force\n", email)

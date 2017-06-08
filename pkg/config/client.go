@@ -22,8 +22,8 @@ type ClientConfig struct {
 	User       *users.User       `json:"user"`
 	PublicKey  []byte            `json:"pubkey"`
 	PrivateKey []byte            `json:"privkey"`
-	pubkey     *x509.Certificate `json:"-"`
-	privkey    *rsa.PrivateKey   `json:"-"`
+	pubkey     *x509.Certificate
+	privkey    *rsa.PrivateKey
 }
 
 // CreateClientConfig creates an RPC client configuration stored on disk

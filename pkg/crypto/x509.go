@@ -17,7 +17,10 @@ import (
 )
 
 const (
-	PEMRSAType         = "RSA PRIVATE KEY"
+	// PEMRSAType RSA PEM Block Type (RSA) private keys
+	PEMRSAType = "RSA PRIVATE KEY"
+
+	// PEMCertificateType RSA PEM Block Type for certificates
 	PEMCertificateType = "CERTIFICATE"
 
 	caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
@@ -66,7 +69,7 @@ func EncodePEMWriter(keydata interface{}, f io.Writer) error {
 	return nil
 }
 
-// Decode PEM decodes a PEM Block from a file and interprets it as either an *x509.Certificate
+// DecodePEMReader decodes a PEM Block from a file and interprets it as either an *x509.Certificate
 // or an *rsa.PrivateKey
 func DecodePEMReader(f io.ReadCloser) (dec interface{}, err error) {
 	defer func() {
