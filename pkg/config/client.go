@@ -35,7 +35,9 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 
 	config := fmt.Sprintf("%s/%s", path, user.Email)
 	if err := os.Mkdir(config, 0700); err != nil {
-		return nil, fmt.Errorf("unable to create user config directory: %s: %s", config, err)
+		if !os.IsExist(err) {
+			return nil, fmt.Errorf("unable to create user config directory: %s: %s", config, err)
+		}
 	}
 
 	c := &ClientConfig{
