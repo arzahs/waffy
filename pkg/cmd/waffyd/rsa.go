@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
+	"github.com/unerror/waffy/pkg/cmd"
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/data"
@@ -32,7 +33,7 @@ func init() {
 					Name:  "common-name",
 					Usage: "Common Name of the server for the certificate",
 				}),
-				Action: withConsensus(gencert),
+				Action: cmd.WithConsensus(gencert),
 			},
 		},
 	})

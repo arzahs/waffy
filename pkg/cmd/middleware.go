@@ -1,4 +1,4 @@
-package waffyd
+package cmd
 
 import (
 	"gopkg.in/urfave/cli.v1"
@@ -7,7 +7,7 @@ import (
 	"github.com/unerror/waffy/pkg/data"
 )
 
-func withConfig(f func(ctx *cli.Context, cfg *config.Config) error) func(*cli.Context) error {
+func WithConfig(f func(ctx *cli.Context, cfg *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -18,8 +18,8 @@ func withConfig(f func(ctx *cli.Context, cfg *config.Config) error) func(*cli.Co
 	}
 }
 
-func withDatabase(f func(ctx *cli.Context, s data.Store) error) func(*cli.Context) error {
-	return withConfig(func(ctx *cli.Context, cfg *config.Config) error {
+func WithDatabase(f func(ctx *cli.Context, s data.Store) error) func(*cli.Context) error {
+	return WithConfig(func(ctx *cli.Context, cfg *config.Config) error {
 		db, err := data.NewDB(cfg.DBPath)
 		if err != nil {
 			return err
@@ -29,13 +29,13 @@ func withDatabase(f func(ctx *cli.Context, s data.Store) error) func(*cli.Contex
 	})
 }
 
-func withDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Config) error) func(*cli.Context) error {
+func WithDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		var c *config.Config
 		var db data.Store
 
 		// TODO: better way to do this config
-		err := withConfig(func(ctx *cli.Context, cfg *config.Config) error {
+		err := WithConfig(func(ctx *cli.Context, cfg *config.Config) error {
 			c = cfg
 			return nil
 		})(ctx)
@@ -43,7 +43,7 @@ func withDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Confi
 			return err
 		}
 
-		err = withDatabase(func(ctx *cli.Context, s data.Store) error {
+		err = WithDatabase(func(ctx *cli.Context, s data.Store) error {
 			db = s
 			return nil
 		})(ctx)
@@ -55,8 +55,8 @@ func withDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Confi
 	}
 }
 
-func withConsensus(f func(ctx *cli.Context, c data.Consensus) error) func(*cli.Context) error {
-	return withDatabaseConfig(func(ctx *cli.Context, s data.Store, cfg *config.Config) error {
+func WithConsensus(f func(ctx *cli.Context, c data.Consensus) error) func(*cli.Context) error {
+	return WithDatabaseConfig(func(ctx *cli.Context, s data.Store, cfg *config.Config) error {
 		raft, err := data.NewRaft(cfg.RaftDIR, cfg.RaftListen, s)
 		if err != nil {
 			return err

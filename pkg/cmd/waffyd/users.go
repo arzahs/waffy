@@ -7,13 +7,15 @@ import (
 	"log"
 	"strconv"
 
+	"gopkg.in/urfave/cli.v1"
+
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/data"
 	"github.com/unerror/waffy/pkg/repository"
 	"github.com/unerror/waffy/pkg/services/protos/certificates"
 	"github.com/unerror/waffy/pkg/services/protos/users"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/unerror/waffy/pkg/cmd"
 )
 
 func init() {
@@ -39,7 +41,7 @@ func init() {
 						Usage: "The user's role",
 					},
 				),
-				Action: withConsensus(createUser),
+				Action: cmd.WithConsensus(createUser),
 			},
 		},
 	})
