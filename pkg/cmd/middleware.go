@@ -7,6 +7,7 @@ import (
 	"github.com/unerror/waffy/pkg/data"
 )
 
+// WithConfig will pass the local configuration object as well as the context to the Action
 func WithConfig(f func(ctx *cli.Context, cfg *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		cfg, err := config.Load()
@@ -18,6 +19,7 @@ func WithConfig(f func(ctx *cli.Context, cfg *config.Config) error) func(*cli.Co
 	}
 }
 
+// WithDatabase will pass the local datastore as well as the context to the Action
 func WithDatabase(f func(ctx *cli.Context, s data.Store) error) func(*cli.Context) error {
 	return WithConfig(func(ctx *cli.Context, cfg *config.Config) error {
 		db, err := data.NewDB(cfg.DBPath)
@@ -29,6 +31,8 @@ func WithDatabase(f func(ctx *cli.Context, s data.Store) error) func(*cli.Contex
 	})
 }
 
+// WithDatabaseConfig will pass the local datastore, the local coniguration as well as the context
+// to the Action
 func WithDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		var c *config.Config
@@ -55,6 +59,7 @@ func WithDatabaseConfig(f func(ctx *cli.Context, s data.Store, cfg *config.Confi
 	}
 }
 
+// WithConsensus will pass the consensus data store as well as the context to the Action
 func WithConsensus(f func(ctx *cli.Context, c data.Consensus) error) func(*cli.Context) error {
 	return WithDatabaseConfig(func(ctx *cli.Context, s data.Store, cfg *config.Config) error {
 		raft, err := data.NewRaft(cfg.RaftDIR, cfg.RaftListen, s)
@@ -66,6 +71,8 @@ func WithConsensus(f func(ctx *cli.Context, c data.Consensus) error) func(*cli.C
 	})
 }
 
+// WithConsensusConfig will pass the consensus data store, and the local configuration as well as
+// the context to the Action
 func WithConsensusConfig(f func(ctx *cli.Context, s data.Consensus, c *config.Config) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		var c *config.Config
