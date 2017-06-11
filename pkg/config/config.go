@@ -99,7 +99,7 @@ func Load() (*Config, error) {
 }
 
 // ensureFile ensures that a file at a given directory exists
-func ensureFile(base, filename string, truncate bool) (*os.File, error) {
+func ensureFile(base, filename string, create bool, truncate bool) (*os.File, error) {
 	var path string
 
 	dir, fName := filepath.Split(filename)
@@ -118,7 +118,11 @@ func ensureFile(base, filename string, truncate bool) (*os.File, error) {
 
 	}
 
-	fileFlags := os.O_RDWR | os.O_CREATE
+	fileFlags := os.O_RDWR
+	if create {
+		fileFlags = fileFlags | os.O_CREATE
+	}
+
 	if truncate {
 		fileFlags = fileFlags | os.O_TRUNC
 	}

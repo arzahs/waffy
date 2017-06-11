@@ -49,7 +49,7 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 		PrivateKey: crypto.EncodePEM(privkey),
 	}
 
-	clientCfg, err := ensureFile(config, "waffy.json", true)
+	clientCfg, err := ensureFile(config, "waffy.json", true, true)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func CreateClientConfig(server string, user *users.User, pubkey *x509.Certificat
 
 // LoadClientConfig loads a client configuration from the filesystem
 func LoadClientConfig(path, email string) (*ClientConfig, error) {
-	f, err := ensureFile(path, "waffy.json", false)
+	f, err := ensureFile(path, "waffy.json", true, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load client configuration: %s", err)
 	}

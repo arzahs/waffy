@@ -150,7 +150,7 @@ func loadKey(f io.ReadCloser) (k crypto.PrivateKey, err error) {
 	return i.(*rsa.PrivateKey), nil
 }
 
-func ensureConfigCertFile(filename string, truncate bool) (*os.File, error) {
+func ensureConfigCertFile(filename string, createAndTruncate bool) (*os.File, error) {
 	cfg, err := Load()
 	if err != nil {
 		return nil, fmt.Errorf("unable to load config: %s", err)
@@ -169,7 +169,7 @@ func ensureConfigCertFile(filename string, truncate bool) (*os.File, error) {
 		return nil, err
 	}
 
-	f, err := ensureFile(certPath, filename, truncate)
+	f, err := ensureFile(certPath, filename, createAndTruncate, createAndTruncate)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func loadConfigCertFile(filename string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	f, err := ensureFile(certPath, filename, false)
+	f, err := ensureFile(certPath, filename, false, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load file %s", filename)
 	}
