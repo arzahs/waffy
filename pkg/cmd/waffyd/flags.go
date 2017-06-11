@@ -22,3 +22,10 @@ var certificateFlags = []cli.Flag{
 		Usage: "Overwrite the existing CA data",
 	},
 }
+
+var joinFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  "join",
+		Usage: "Raft consensus join address",
+	},
+}

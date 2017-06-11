@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"log"
 
+	"context"
+
+	"github.com/unerror/waffy/pkg/cmd"
 	"github.com/unerror/waffy/pkg/config"
 	"github.com/unerror/waffy/pkg/crypto"
 	"github.com/unerror/waffy/pkg/services"
+	"github.com/unerror/waffy/pkg/services/protos/nodes"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -16,16 +20,12 @@ func init() {
 	Cmds = append(Cmds, cli.Command{
 		Name:   "start",
 		Usage:  "Start the waffyd service",
-		Action: start,
+		Flags:  joinFlags,
+		Action: cmd.WithConfig(start),
 	})
 }
 
-func start(c *cli.Context) {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("unable to load config: %s", err)
-	}
-
+func start(ctx *cli.Context, cfg *config.Config) error {
 	ca, _, err := config.LoadCA()
 	if ca == nil {
 		log.Fatalf("unable to load CA cert: %s", err)
@@ -39,24 +39,41 @@ func start(c *cli.Context) {
 		log.Fatalf("unable to load server keypair: %s", err)
 	}
 
+	a := services.NewAuthentication(pool, keypair)
+
+	if ctx.String("join") != "" {
+		conn, err := services.DialClient(ctx.String("join"), a)
+		if err != nil {
+			log.Fatalf("unable to start gpc client: %s", err)
+		}
+
+		client := nodes.NewJoinServiceClient(conn)
+		resp, err := client.Join(context.Background(), &nodes.JoinRequest{
+			Hostname: cfg.RPCName,
+		})
+		if err != nil {
+			log.Fatalf("unable to join node: %s", err)
+		}
+
+		log.Printf("Node %s joined successfully", resp.Hostname)
+	}
+
 	log.Printf("starting RPC for %s server on %s", cfg.RPCName, cfg.APIListen)
-	if err := services.Serve(cfg.APIListen, pool, *keypair); err != nil {
+	if err := services.Serve(cfg.APIListen, a); err != nil {
 		log.Fatalf("unable to serve RPC: %s", err)
 	}
+	return nil
 }
 
-func loadServerKeypair(hostname string) (*tls.Certificate, error) {
-	certName := fmt.Sprintf("%s.crt", hostname)
-	keyName := fmt.Sprintf("%s.key", hostname)
-
-	cert, err := config.LoadCert(certName)
+func loadServerKeypair(hostname string) (tls.Certificate, error) {
+	cert, err := config.LoadCert(hostname)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load server certificate for %s: %s", hostname, err)
+		return tls.Certificate{}, fmt.Errorf("unable to load server certificate for %s: %s", hostname, err)
 	}
 
-	key, err := config.LoadKey(keyName)
+	key, err := config.LoadKey(hostname)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load server key: %s", err)
+		return tls.Certificate{}, fmt.Errorf("unable to load server key: %s", err)
 	}
 
 	keypair, err := tls.X509KeyPair(
@@ -64,5 +81,5 @@ func loadServerKeypair(hostname string) (*tls.Certificate, error) {
 		crypto.EncodePEM(key),
 	)
 
-	return &keypair, err
+	return keypair, err
 }
