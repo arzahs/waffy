@@ -18,10 +18,10 @@ const (
 
 // ClientConfig is the configuration for the client to access RPC
 type ClientConfig struct {
-	Server     string            `json:"server"`
-	User       *users.User       `json:"user"`
-	PublicKey  []byte            `json:"pubkey"`
-	PrivateKey []byte            `json:"privkey"`
+	Server     string      `json:"server"`
+	User       *users.User `json:"user"`
+	PublicKey  []byte      `json:"pubkey"`
+	PrivateKey []byte      `json:"privkey"`
 	pubkey     *x509.Certificate
 	privkey    *rsa.PrivateKey
 }
