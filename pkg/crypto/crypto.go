@@ -42,7 +42,7 @@ func NewCertificate(
 		Subject: pkix.Name{
 			CommonName: commonName,
 		},
-		NotBefore: time.Now(),
+		NotBefore: time.Now().Add(-24 * time.Hour),
 		NotAfter:  time.Now().Add(DefaultExpiryTime),
 
 		KeyUsage: hostKeyUsage,

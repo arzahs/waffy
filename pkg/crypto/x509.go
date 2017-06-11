@@ -117,8 +117,8 @@ func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
 	var template = x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject:      pkix.Name{},
-		NotBefore:    time.Now(),
-		NotAfter:     time.Time{},
+		NotBefore:    time.Now().Truncate(24 * time.Hour),
+		NotAfter:     time.Now().Add(DefaultExpiryTime),
 
 		KeyUsage:    caKeyUsage,
 		ExtKeyUsage: nil,
