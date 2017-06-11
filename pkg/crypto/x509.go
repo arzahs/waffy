@@ -23,7 +23,7 @@ const (
 	// PEMCertificateType RSA PEM Block Type for certificates
 	PEMCertificateType = "CERTIFICATE"
 
-	caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
+	caKeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageKeyAgreement | x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature
 )
 
 // NewPrivateKey generates a new RSA PublicKey
@@ -120,8 +120,13 @@ func newCertificateAuthority(key crypto.PrivateKey) (*x509.Certificate, error) {
 		NotBefore:    time.Now().Truncate(24 * time.Hour),
 		NotAfter:     time.Now().Add(DefaultExpiryTime),
 
-		KeyUsage:    caKeyUsage,
-		ExtKeyUsage: nil,
+		KeyUsage: caKeyUsage,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageClientAuth,
+			x509.ExtKeyUsageServerAuth,
+		},
+
+		BasicConstraintsValid: true,
 
 		IsCA:         true,
 		SubjectKeyId: subjectID[:],
