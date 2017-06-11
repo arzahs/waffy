@@ -17,23 +17,37 @@ type baseHandler struct {
 	s data.Consensus
 }
 
+type Authentication struct {
+	caPool  *x509.CertPool
+	keypair tls.Certificate
+}
+
+func NewAuthentication(p *x509.CertPool, k tls.Certificate) *Authentication {
+	return &Authentication{
+		caPool:  p,
+		keypair: k,
+	}
+}
+
+func (a *Authentication) Credentials() credentials.TransportCredentials {
+	creds := &tls.Config{
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   tls.VersionTLS12,
+		ClientCAs:    a.caPool,
+		RootCAs:      a.caPool,
+		Certificates: []tls.Certificate{a.keypair},
+	}
+	creds.BuildNameToCertificate()
+
+	return credentials.NewTLS(creds)
+}
+
 // Serve blocks and services the RPC
-func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error {
+func Serve(listen string, a *Authentication) error {
 	lis, err := net.Listen("tcp", listen)
 	if err != nil {
 		return fmt.Errorf("unable to start listener: %s", err)
 	}
-
-	if err != nil {
-		return fmt.Errorf("unable to load keypair for listener: %s", err)
-	}
-
-	creds := credentials.NewTLS(&tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS12,
-		ClientCAs:    caPool,
-		Certificates: []tls.Certificate{keypair},
-	})
 
 	s, err := newRaft()
 	if err != nil {
@@ -44,11 +58,18 @@ func Serve(listen string, caPool *x509.CertPool, keypair tls.Certificate) error 
 		s: s,
 	}
 
-	server := grpc.NewServer(grpc.Creds(creds))
+	server := grpc.NewServer(grpc.Creds(a.Credentials()))
 
 	nodes.RegisterJoinServiceServer(server, &Node{handler})
 
 	return server.Serve(lis)
+}
+
+func DialClient(addr string, a *Authentication) (*grpc.ClientConn, error) {
+	return grpc.Dial(addr,
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(a.Credentials()),
+	)
 }
 
 func newRaft() (data.Consensus, error) {
