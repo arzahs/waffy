@@ -17,26 +17,26 @@ type Node struct {
 }
 
 // Join joins a new Node to the RPC and Raft consensus
-func (n *Node) Join(ctx context.Context, req *nodes.JoinRequest) (*nodes.JoinResponse, error) {
-	if _, err := repository.FindNodeByHostname(n.s, req.Hostname); err != nil {
-		return nil, errors.New("hostname already exists")
+func (n *Node) Join(ctx context.Context, req *nodes.NodeRequest) (*nodes.JoinResponse, error) {
+	if n, err := repository.FindNodeByHostname(n.s, req.Node.Hostname); n != nil && err != nil {
+		return nil, fmt.Errorf("hostname already exists: %s", err)
 	}
 
 	node := &nodes.Node{
-		Hostname: req.Hostname,
+		Hostname: req.Node.Hostname,
 		Leader:   false, // not leader by default until election
 	}
-	if err := repository.CreateNode(n.s, node); err != nil {
-		return nil, errors.New("unable to create new node")
+	if err := repository.SetNode(n.s, node); err != nil {
+		return nil, fmt.Errorf("unable to create new node: %s", err)
 	}
 
-	err := n.s.Join(req.Hostname)
+	err := n.s.Join(req.Node.RaftAddress)
 	if err != nil {
 		return nil, fmt.Errorf("unable to join raft node: %s", err)
 	}
 
 	return &nodes.JoinResponse{
-		Hostname: req.Hostname,
+		Hostname: req.Node.Hostname,
 	}, nil
 }
 
@@ -52,4 +52,27 @@ func (n *Node) Leave(ctx context.Context, req *nodes.LeaveRequest) (*nodes.Leave
 	return &nodes.LeaveResponse{
 		Hostname: req.Hostname,
 	}, nil
+}
+
+// UpdateNode updates information about a Node
+func (n *Node) UpdateNode(ctx context.Context, req *nodes.NodeRequest) (*nodes.UpdateNodeResponse, error) {
+	res := &nodes.UpdateNodeResponse{
+		Node: req.Node,
+		New:  false,
+	}
+	existing, err := repository.FindNodeByHostname(n.s, req.Node.Hostname)
+	if err != nil && existing == nil {
+		return nil, fmt.Errorf("unable to save node: %s", err)
+	}
+
+	if existing == nil {
+		res.New = true
+	}
+
+	err = repository.SetNode(n.s, req.Node)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

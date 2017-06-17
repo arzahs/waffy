@@ -9,17 +9,17 @@
 
 	It has these top-level messages:
 		Node
-		JoinRequest
+		NodeRequest
 		JoinResponse
 		LeaveRequest
 		LeaveResponse
+		UpdateNodeResponse
 */
 package nodes
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import certificates "github.com/unerror/waffy/pkg/services/protos/certificates"
 
 import (
 	context "golang.org/x/net/context"
@@ -41,9 +41,10 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // Node represents a load balancer node
 type Node struct {
-	Hostname    string                    `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	Leader      bool                      `protobuf:"varint,3,opt,name=leader,proto3" json:"leader,omitempty"`
-	Certificate *certificates.Certificate `protobuf:"bytes,2,opt,name=certificate" json:"certificate,omitempty"`
+	Hostname    string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Port        string `protobuf:"bytes,5,opt,name=port,proto3" json:"port,omitempty"`
+	RaftAddress string `protobuf:"bytes,4,opt,name=raftAddress,proto3" json:"raftAddress,omitempty"`
+	Leader      bool   `protobuf:"varint,3,opt,name=leader,proto3" json:"leader,omitempty"`
 }
 
 func (m *Node) Reset()                    { *m = Node{} }
@@ -58,6 +59,20 @@ func (m *Node) GetHostname() string {
 	return ""
 }
 
+func (m *Node) GetPort() string {
+	if m != nil {
+		return m.Port
+	}
+	return ""
+}
+
+func (m *Node) GetRaftAddress() string {
+	if m != nil {
+		return m.RaftAddress
+	}
+	return ""
+}
+
 func (m *Node) GetLeader() bool {
 	if m != nil {
 		return m.Leader
@@ -65,27 +80,20 @@ func (m *Node) GetLeader() bool {
 	return false
 }
 
-func (m *Node) GetCertificate() *certificates.Certificate {
+type NodeRequest struct {
+	Node *Node `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
+}
+
+func (m *NodeRequest) Reset()                    { *m = NodeRequest{} }
+func (m *NodeRequest) String() string            { return proto.CompactTextString(m) }
+func (*NodeRequest) ProtoMessage()               {}
+func (*NodeRequest) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{1} }
+
+func (m *NodeRequest) GetNode() *Node {
 	if m != nil {
-		return m.Certificate
+		return m.Node
 	}
 	return nil
-}
-
-type JoinRequest struct {
-	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
-}
-
-func (m *JoinRequest) Reset()                    { *m = JoinRequest{} }
-func (m *JoinRequest) String() string            { return proto.CompactTextString(m) }
-func (*JoinRequest) ProtoMessage()               {}
-func (*JoinRequest) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{1} }
-
-func (m *JoinRequest) GetHostname() string {
-	if m != nil {
-		return m.Hostname
-	}
-	return ""
 }
 
 type JoinResponse struct {
@@ -136,12 +144,37 @@ func (m *LeaveResponse) GetHostname() string {
 	return ""
 }
 
+type UpdateNodeResponse struct {
+	New  bool  `protobuf:"varint,1,opt,name=new,proto3" json:"new,omitempty"`
+	Node *Node `protobuf:"bytes,2,opt,name=node" json:"node,omitempty"`
+}
+
+func (m *UpdateNodeResponse) Reset()                    { *m = UpdateNodeResponse{} }
+func (m *UpdateNodeResponse) String() string            { return proto.CompactTextString(m) }
+func (*UpdateNodeResponse) ProtoMessage()               {}
+func (*UpdateNodeResponse) Descriptor() ([]byte, []int) { return fileDescriptorNodes, []int{5} }
+
+func (m *UpdateNodeResponse) GetNew() bool {
+	if m != nil {
+		return m.New
+	}
+	return false
+}
+
+func (m *UpdateNodeResponse) GetNode() *Node {
+	if m != nil {
+		return m.Node
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Node)(nil), "nodes.Node")
-	proto.RegisterType((*JoinRequest)(nil), "nodes.JoinRequest")
+	proto.RegisterType((*NodeRequest)(nil), "nodes.NodeRequest")
 	proto.RegisterType((*JoinResponse)(nil), "nodes.JoinResponse")
 	proto.RegisterType((*LeaveRequest)(nil), "nodes.LeaveRequest")
 	proto.RegisterType((*LeaveResponse)(nil), "nodes.LeaveResponse")
+	proto.RegisterType((*UpdateNodeResponse)(nil), "nodes.UpdateNodeResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -152,11 +185,77 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
+// Client API for NodeService service
+
+type NodeServiceClient interface {
+	// UpdateNodeRequest updates information about a Node based on the given request
+	UpdateNode(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*UpdateNodeResponse, error)
+}
+
+type nodeServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewNodeServiceClient(cc *grpc.ClientConn) NodeServiceClient {
+	return &nodeServiceClient{cc}
+}
+
+func (c *nodeServiceClient) UpdateNode(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*UpdateNodeResponse, error) {
+	out := new(UpdateNodeResponse)
+	err := grpc.Invoke(ctx, "/nodes.NodeService/UpdateNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for NodeService service
+
+type NodeServiceServer interface {
+	// UpdateNodeRequest updates information about a Node based on the given request
+	UpdateNode(context.Context, *NodeRequest) (*UpdateNodeResponse, error)
+}
+
+func RegisterNodeServiceServer(s *grpc.Server, srv NodeServiceServer) {
+	s.RegisterService(&_NodeService_serviceDesc, srv)
+}
+
+func _NodeService_UpdateNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).UpdateNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nodes.NodeService/UpdateNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).UpdateNode(ctx, req.(*NodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _NodeService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "nodes.NodeService",
+	HandlerType: (*NodeServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdateNode",
+			Handler:    _NodeService_UpdateNode_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "pkg/services/protos/nodes/nodes.proto",
+}
+
 // Client API for JoinService service
 
 type JoinServiceClient interface {
 	// Join a node to the consensus
-	Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
+	Join(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*JoinResponse, error)
 	// Leave a node to the consensus
 	Leave(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*LeaveResponse, error)
 }
@@ -169,7 +268,7 @@ func NewJoinServiceClient(cc *grpc.ClientConn) JoinServiceClient {
 	return &joinServiceClient{cc}
 }
 
-func (c *joinServiceClient) Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error) {
+func (c *joinServiceClient) Join(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*JoinResponse, error) {
 	out := new(JoinResponse)
 	err := grpc.Invoke(ctx, "/nodes.JoinService/Join", in, out, c.cc, opts...)
 	if err != nil {
@@ -191,7 +290,7 @@ func (c *joinServiceClient) Leave(ctx context.Context, in *LeaveRequest, opts ..
 
 type JoinServiceServer interface {
 	// Join a node to the consensus
-	Join(context.Context, *JoinRequest) (*JoinResponse, error)
+	Join(context.Context, *NodeRequest) (*JoinResponse, error)
 	// Leave a node to the consensus
 	Leave(context.Context, *LeaveRequest) (*LeaveResponse, error)
 }
@@ -201,7 +300,7 @@ func RegisterJoinServiceServer(s *grpc.Server, srv JoinServiceServer) {
 }
 
 func _JoinService_Join_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(JoinRequest)
+	in := new(NodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -213,7 +312,7 @@ func _JoinService_Join_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/nodes.JoinService/Join",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JoinServiceServer).Join(ctx, req.(*JoinRequest))
+		return srv.(JoinServiceServer).Join(ctx, req.(*NodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -274,16 +373,6 @@ func (m *Node) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
 		i += copy(dAtA[i:], m.Hostname)
 	}
-	if m.Certificate != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintNodes(dAtA, i, uint64(m.Certificate.Size()))
-		n1, err := m.Certificate.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
 	if m.Leader {
 		dAtA[i] = 0x18
 		i++
@@ -294,10 +383,22 @@ func (m *Node) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i++
 	}
+	if len(m.RaftAddress) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.RaftAddress)))
+		i += copy(dAtA[i:], m.RaftAddress)
+	}
+	if len(m.Port) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(len(m.Port)))
+		i += copy(dAtA[i:], m.Port)
+	}
 	return i, nil
 }
 
-func (m *JoinRequest) Marshal() (dAtA []byte, err error) {
+func (m *NodeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -307,16 +408,20 @@ func (m *JoinRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *JoinRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *NodeRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Hostname) > 0 {
+	if m.Node != nil {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintNodes(dAtA, i, uint64(len(m.Hostname)))
-		i += copy(dAtA[i:], m.Hostname)
+		i = encodeVarintNodes(dAtA, i, uint64(m.Node.Size()))
+		n1, err := m.Node.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
 	}
 	return i, nil
 }
@@ -393,6 +498,44 @@ func (m *LeaveResponse) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *UpdateNodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateNodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.New {
+		dAtA[i] = 0x8
+		i++
+		if m.New {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Node != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNodes(dAtA, i, uint64(m.Node.Size()))
+		n2, err := m.Node.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
 func encodeFixed64Nodes(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -427,21 +570,25 @@ func (m *Node) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNodes(uint64(l))
 	}
-	if m.Certificate != nil {
-		l = m.Certificate.Size()
-		n += 1 + l + sovNodes(uint64(l))
-	}
 	if m.Leader {
 		n += 2
+	}
+	l = len(m.RaftAddress)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	l = len(m.Port)
+	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
 	}
 	return n
 }
 
-func (m *JoinRequest) Size() (n int) {
+func (m *NodeRequest) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Hostname)
-	if l > 0 {
+	if m.Node != nil {
+		l = m.Node.Size()
 		n += 1 + l + sovNodes(uint64(l))
 	}
 	return n
@@ -472,6 +619,19 @@ func (m *LeaveResponse) Size() (n int) {
 	_ = l
 	l = len(m.Hostname)
 	if l > 0 {
+		n += 1 + l + sovNodes(uint64(l))
+	}
+	return n
+}
+
+func (m *UpdateNodeResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.New {
+		n += 2
+	}
+	if m.Node != nil {
+		l = m.Node.Size()
 		n += 1 + l + sovNodes(uint64(l))
 	}
 	return n
@@ -548,39 +708,6 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 			}
 			m.Hostname = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Certificate", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNodes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthNodes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Certificate == nil {
-				m.Certificate = &certificates.Certificate{}
-			}
-			if err := m.Certificate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Leader", wireType)
@@ -601,59 +728,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Leader = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipNodes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthNodes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *JoinRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowNodes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: JoinRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: JoinRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
+		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Hostname", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RaftAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -678,7 +755,119 @@ func (m *JoinRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Hostname = string(dAtA[iNdEx:postIndex])
+			m.RaftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Port", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Port = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNodes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNodes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NodeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNodes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NodeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NodeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Node", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Node == nil {
+				m.Node = &Node{}
+			}
+			if err := m.Node.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -938,6 +1127,109 @@ func (m *LeaveResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *UpdateNodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNodes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateNodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateNodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field New", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.New = bool(v != 0)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Node", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNodes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNodes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Node == nil {
+				m.Node = &Node{}
+			}
+			if err := m.Node.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNodes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNodes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipNodes(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1046,23 +1338,25 @@ var (
 func init() { proto.RegisterFile("pkg/services/protos/nodes/nodes.proto", fileDescriptorNodes) }
 
 var fileDescriptorNodes = []byte{
-	// 288 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0xc8, 0x4e, 0xd7,
-	0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0x2d, 0xd6, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0x2f, 0xd6,
-	0xcf, 0xcb, 0x4f, 0x49, 0x85, 0x92, 0x7a, 0x60, 0x21, 0x21, 0x56, 0x30, 0x47, 0xca, 0x27, 0x3d,
-	0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0xbf, 0x34, 0x2f, 0xb5, 0xa8, 0x28, 0xbf,
-	0x48, 0xbf, 0x3c, 0x31, 0x2d, 0xad, 0x52, 0x1f, 0x9b, 0x31, 0xc9, 0xa9, 0x45, 0x25, 0x99, 0x69,
-	0x99, 0xc9, 0x89, 0x25, 0xa9, 0xa8, 0x1c, 0x88, 0xa1, 0x4a, 0xe5, 0x5c, 0x2c, 0x7e, 0xf9, 0x29,
-	0xa9, 0x42, 0x52, 0x5c, 0x1c, 0x19, 0xf9, 0xc5, 0x25, 0x79, 0x89, 0xb9, 0xa9, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0x9c, 0x41, 0x70, 0xbe, 0x90, 0x35, 0x17, 0x37, 0x92, 0x4e, 0x09, 0x26, 0x05, 0x46,
-	0x0d, 0x6e, 0x23, 0x49, 0x3d, 0x14, 0xd3, 0x9c, 0x11, 0x9c, 0x20, 0x64, 0xd5, 0x42, 0x62, 0x5c,
-	0x6c, 0x39, 0xa9, 0x89, 0x29, 0xa9, 0x45, 0x12, 0xcc, 0x0a, 0x8c, 0x1a, 0x1c, 0x41, 0x50, 0x9e,
-	0x92, 0x26, 0x17, 0xb7, 0x57, 0x7e, 0x66, 0x5e, 0x50, 0x6a, 0x61, 0x69, 0x6a, 0x71, 0x09, 0x3e,
-	0xfb, 0x95, 0xb4, 0xb8, 0x78, 0x20, 0x4a, 0x8b, 0x0b, 0xf2, 0xf3, 0x8a, 0x53, 0x09, 0xa9, 0xf5,
-	0x49, 0x4d, 0x2c, 0x4b, 0x25, 0xc6, 0x5c, 0x6d, 0x2e, 0x5e, 0xa8, 0x5a, 0xc2, 0x06, 0x1b, 0x15,
-	0x41, 0xdc, 0x1b, 0x0c, 0x09, 0x5f, 0x21, 0x7d, 0x2e, 0x16, 0x10, 0x57, 0x48, 0x48, 0x0f, 0x12,
-	0x45, 0x48, 0x7e, 0x91, 0x12, 0x46, 0x11, 0x83, 0x9a, 0x6d, 0xc4, 0xc5, 0x0a, 0xb6, 0x4c, 0x08,
-	0x26, 0x8b, 0xec, 0x4c, 0x29, 0x11, 0x54, 0x41, 0x88, 0x1e, 0x27, 0x81, 0x13, 0x8f, 0xe4, 0x18,
-	0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc6, 0x63, 0x39, 0x86, 0x24, 0x36, 0x70,
-	0xac, 0x19, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x4e, 0x0e, 0x32, 0x61, 0x33, 0x02, 0x00, 0x00,
+	// 320 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xcd, 0x4a, 0xc3, 0x40,
+	0x10, 0x76, 0x6d, 0x5a, 0xea, 0x44, 0xa1, 0x8c, 0x22, 0xb1, 0x87, 0x58, 0x0a, 0x42, 0x51, 0x68,
+	0x20, 0x1e, 0x3d, 0xe9, 0x45, 0x28, 0xe2, 0x21, 0xe2, 0x03, 0x44, 0x77, 0xd4, 0xa2, 0x66, 0xd7,
+	0xdd, 0xb5, 0xbe, 0x8a, 0x8f, 0xe4, 0xd1, 0x47, 0x90, 0xfa, 0x22, 0xb2, 0x3f, 0xad, 0x29, 0x6a,
+	0xf1, 0x12, 0x66, 0xbe, 0xf9, 0xe6, 0x9b, 0x99, 0x2f, 0x0b, 0x7b, 0xf2, 0xfe, 0x36, 0xd3, 0xa4,
+	0x26, 0xe3, 0x6b, 0xd2, 0x99, 0x54, 0xc2, 0x08, 0x9d, 0x55, 0x82, 0x53, 0xf8, 0x0e, 0x1d, 0x84,
+	0x4d, 0x97, 0xf4, 0x25, 0x44, 0xe7, 0x82, 0x13, 0x76, 0xa1, 0x7d, 0x27, 0xb4, 0xa9, 0xca, 0x47,
+	0x4a, 0x58, 0x8f, 0x0d, 0xd6, 0x8a, 0x79, 0x8e, 0xdb, 0xd0, 0x7a, 0xa0, 0x92, 0x93, 0x4a, 0x1a,
+	0x3d, 0x36, 0x68, 0x17, 0x21, 0xc3, 0x1e, 0xc4, 0xaa, 0xbc, 0x31, 0xc7, 0x9c, 0x2b, 0xd2, 0x3a,
+	0x89, 0x5c, 0x5b, 0x1d, 0x42, 0x84, 0x48, 0x0a, 0x65, 0x92, 0xa6, 0x2b, 0xb9, 0xb8, 0x3f, 0x84,
+	0xd8, 0x4e, 0x2c, 0xe8, 0xe9, 0x99, 0xb4, 0xc1, 0x5d, 0x88, 0xec, 0x26, 0x6e, 0x68, 0x9c, 0xc7,
+	0x43, 0xbf, 0xa3, 0x63, 0xb8, 0x42, 0x7f, 0x1f, 0xd6, 0x47, 0x62, 0x5c, 0x15, 0xa4, 0xa5, 0xa8,
+	0xf4, 0xd2, 0x4d, 0x2d, 0xf7, 0x8c, 0xca, 0xc9, 0x5c, 0x7c, 0x19, 0xf7, 0x00, 0x36, 0x02, 0xf7,
+	0x1f, 0xc2, 0xa7, 0x80, 0x97, 0x92, 0x97, 0x86, 0xfc, 0xea, 0xa1, 0xa3, 0x03, 0x8d, 0x8a, 0x5e,
+	0x1c, 0xb9, 0x5d, 0xd8, 0x70, 0x7e, 0xcd, 0xea, 0x1f, 0xd7, 0xe4, 0x23, 0x7f, 0xfd, 0x85, 0xff,
+	0x3f, 0x78, 0x04, 0xf0, 0xad, 0x8b, 0x58, 0xe7, 0xfb, 0x13, 0xba, 0x3b, 0x01, 0xfb, 0x39, 0x3e,
+	0x57, 0x10, 0x5b, 0x67, 0x66, 0x5a, 0x19, 0x44, 0x36, 0xfd, 0x55, 0x65, 0x33, 0x60, 0x0b, 0x4e,
+	0xe6, 0xd0, 0x74, 0x0e, 0xe0, 0xac, 0x5a, 0xf7, 0xae, 0xbb, 0xb5, 0x08, 0xfa, 0x9e, 0x93, 0xce,
+	0xdb, 0x34, 0x65, 0xef, 0xd3, 0x94, 0x7d, 0x4c, 0x53, 0xf6, 0xfa, 0x99, 0xae, 0x5c, 0xb5, 0xdc,
+	0x7b, 0x3a, 0xfc, 0x0a, 0x00, 0x00, 0xff, 0xff, 0xf3, 0x80, 0x2f, 0x56, 0x78, 0x02, 0x00, 0x00,
 }

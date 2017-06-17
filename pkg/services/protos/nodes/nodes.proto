@@ -4,26 +4,31 @@
 
 syntax = "proto3";
 package nodes;
-import "github.com/unerror/waffy/pkg/services/protos/certificates/certificates.proto";
 
 // Node represents a load balancer node
 message Node {
     string hostname = 1; // hostname is the hostname of the IP address
+    string port = 5; // port of Node
+    string raftAddress = 4; // address of raft listener
     bool leader = 3; // if this node is considered the Leader
+}
 
-    certificates.Certificate certificate = 2; // certificate is the Node's authentication certificate
+// NodeServie is the main service for Node management
+service NodeService {
+    // UpdateNodeRequest updates information about a Node based on the given request
+    rpc UpdateNode(NodeRequest) returns (UpdateNodeResponse);
 }
 
 // Node service for node management
 service JoinService {
     // Join a node to the consensus
-    rpc Join(JoinRequest) returns (JoinResponse);
+    rpc Join(NodeRequest) returns (JoinResponse);
     // Leave a node to the consensus
     rpc Leave(LeaveRequest) returns (LeaveResponse);
 }
 
-message JoinRequest {
-    string hostname = 1; // Hostname of node
+message NodeRequest {
+    Node node = 1; // node information to add
 }
 
 message JoinResponse {
@@ -36,4 +41,9 @@ message LeaveRequest {
 
 message LeaveResponse {
     string hostname = 1; //Hostname of node
+}
+
+message UpdateNodeResponse {
+    bool new = 1; // true if this node could not be found and was added
+    Node node = 2; // the information about the saved node
 }
