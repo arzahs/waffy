@@ -11,7 +11,7 @@ import (
 
 const (
 	// DefaultAPIListen is the default listen address for the RPC
-	DefaultAPIListen = "0.0.0.0:8500"
+	DefaultAPIListen = "0.0.0.0:8600"
 
 	// DefaultCertPath is the default path to certificates
 	DefaultCertPath = "./etc"
