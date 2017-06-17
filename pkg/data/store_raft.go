@@ -162,22 +162,11 @@ func (s *Raft) waitForIndex(idx uint64, t time.Duration) error {
 func (s *Raft) Bucket(name string) (Bucket, error) {
 	path := fmt.Sprintf("%s%s/", s.path, name)
 
-	f, err := s.applyCmd(&command{
-		Op:         opBucket,
-		BucketPath: path,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if fErr := f.error; fErr != nil {
-		return nil, fErr
-	}
-
 	return &Raft{
 		s:    s.s,
 		r:    s.r,
 		l:    s.l,
-		path: fmt.Sprintf("%s%s/", s.path, name),
+		path: path,
 	}, nil
 }
 
