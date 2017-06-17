@@ -1,6 +1,13 @@
 // Package data is responsible for data management within the load balancer
 package data
 
+import "time"
+
+// Comparison is a comparison function for comparing keys and values against a message
+type Comparison interface {
+	Compare(k, v []byte) bool
+}
+
 // Node presents a single key/value pair
 type Node struct {
 	Key    []byte
@@ -34,7 +41,11 @@ type ValueLister interface {
 
 // ValueFinder is an interface that finds data in the store
 type ValueFinder interface {
+	// Seek finds a some data in the store by the key name
 	Seek(k []byte) ([]byte, error)
+
+	// FindBy finds data in the store by comparison against current values
+	FindBy(cmd Comparison) ([]byte, error)
 }
 
 // Store is a storage service, that can store data in a tree-like structure

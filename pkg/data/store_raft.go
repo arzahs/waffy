@@ -301,6 +301,16 @@ func (s *Raft) Seek(k []byte) ([]byte, error) {
 	return f.node.Value, f.error
 }
 
+// FindBy finds a value in the bucket by Comparison weakly
+func (s *Raft) FindBy(cmp Comparison) ([]byte, error) {
+	bucket, err := s.bucket(s.path)
+	if err != nil {
+		return nil, err
+	}
+
+	return bucket.FindBy(cmp)
+}
+
 // SeekWeak finds a weakly consistent value in the Bucket by key k
 func (s *Raft) SeekWeak(k []byte) ([]byte, error) {
 	s.l.Lock()

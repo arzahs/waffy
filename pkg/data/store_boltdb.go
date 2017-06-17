@@ -298,3 +298,31 @@ func (s *BoltBucket) Seek(k []byte) ([]byte, error) {
 
 	return value, err
 }
+
+// FindBy finds a value by comparison to other objects in the bucket. This uses
+// BoltDB's cursor to loop, and compare each k/v with the message m in the Comparison
+func (s *BoltBucket) FindBy(cmp Comparison) ([]byte, error) {
+	var value []byte
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket, err := s.this(tx)
+		if err != nil {
+			return err
+		}
+
+		c := bucket.Cursor()
+		for k, v := c.Last(); k != nil || v != nil; k, v = c.Prev() {
+			if cmp.Compare(k, v) {
+				value = v
+				return nil
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return value, nil
+}
